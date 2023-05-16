@@ -76,66 +76,12 @@
                 </div>
             </li>
 
-            <!-- Nav Item - Utilities Collapse Menu -->
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseUtilities"
-                    aria-expanded="true" aria-controls="collapseUtilities">
-                    <i class="fas fa-fw fa-wrench"></i>
-                    <span>Utilities</span>
-                </a>
-                <div id="collapseUtilities" class="collapse" aria-labelledby="headingUtilities"
-                    data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <h6 class="collapse-header">Custom Utilities:</h6>
-                        <a class="collapse-item" href="utilities-color.html">Colors</a>
-                        <a class="collapse-item" href="utilities-border.html">Borders</a>
-                        <a class="collapse-item" href="utilities-animation.html">Animations</a>
-                        <a class="collapse-item" href="utilities-other.html">Other</a>
-                    </div>
-                </div>
-            </li>
-
-            <!-- Divider -->
-            <hr class="sidebar-divider">
-
-            <!-- Heading -->
-            <div class="sidebar-heading">
-                Addons
-            </div>
-
-            <!-- Nav Item - Pages Collapse Menu -->
-            <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapsePages"
-                    aria-expanded="true" aria-controls="collapsePages">
-                    <i class="fas fa-fw fa-folder"></i>
-                    <span>Pages</span>
-                </a>
-                <div id="collapsePages" class="collapse" aria-labelledby="headingPages" data-parent="#accordionSidebar">
-                    <div class="bg-white py-2 collapse-inner rounded">
-                        <h6 class="collapse-header">Login Screens:</h6>
-                        <a class="collapse-item" href="login.html">Login</a>
-                        <a class="collapse-item" href="register.html">Register</a>
-                        <a class="collapse-item" href="forgot-password.html">Forgot Password</a>
-                        <div class="collapse-divider"></div>
-                        <h6 class="collapse-header">Other Pages:</h6>
-                        <a class="collapse-item" href="404.html">404 Page</a>
-                        <a class="collapse-item" href="blank.html">Blank Page</a>
-                    </div>
-                </div>
-            </li>
-
-            <!-- Nav Item - Charts -->
-            <li class="nav-item">
-                <a class="nav-link" href="charts.html">
-                    <i class="fas fa-fw fa-chart-area"></i>
-                    <span>Charts</span></a>
-            </li>
 
             <!-- Nav Item - Tables -->
             <li class="nav-item">
-                <a class="nav-link" href="tables.html">
+                <a class="nav-link" href="Historico.html">
                     <i class="fas fa-fw fa-table"></i>
-                    <span>Tables</span></a>
+                    <span>Histórico</span></a>
             </li>
 
             
@@ -231,15 +177,57 @@
                 <!-- End of Topbar -->
                 <div id="sensor-data"></div>
                  
-                             <!-- Content Row -->
-                    <div class="row">
+                     
+            <!-- Content Row -->
+            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+            <style>
+                .custom-button {
+                    background-color: #007bff;
+                    color: #fff;
+                    border-color: #007bff;
+                    margin-bottom: 15px;
+                }
 
-                        <div class="col-xl-8 col-lg-7">
+                .dropdown-container {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    width: 25%;
+                }
+
+                .dropdown-container .form-group {
+                    margin-right: 10px;
+                    flex: 1;
+                }
+
+                .container {
+                    margin-left: 0px;
+                    margin-bottom: 10px;
+                    /* Adjust the left padding as needed */
+                }
+            </style>
+           
+
+            <body>
+                <div class="container">
+                    <div class="row">
+                      <div class="col-md-8">
+                        <div class="form-group">
+                          <select id="dropdown" class="form-control">
+                            <option>Select an option</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="col-md-4">
+                        <button id="loadButton" class="btn btn-primary btn-block custom-button">Load Options</button>
+                      </div>
+                    </div>
+                  </div>
 
                             <!-- Area Chart -->
                             <div class="card shadow mb-4">
                                 <div class="card-header py-3">
-                                    <h6 class="m-0 font-weight-bold text-primary">Humidade - mudar valores, em baixo ficam as timestamps</h6>
+                                    <h6 class="m-0 font-weight-bold text-primary">Temperatura - mudar valores, em baixo ficam as timestamps</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="chart-area">
@@ -328,14 +316,39 @@ const firebaseConfig = {
         // Retrieve data from Firebase
         var dataRef = database.ref('sensor');
 
+        
+
+        // Retrieve the data from Firebase and populate the dropdown
+        dataRef.on("value", function (snapshot) {
+            const dropdown = document.getElementById("dropdown");
+
+            // Clear existing options
+            dropdown.innerHTML = '<option>Select an option</option>';
+
+            // Populate options with Firebase child values
+            snapshot.forEach(function (childSnapshot) {
+                const childKey = childSnapshot.key;
+                const childValue = childSnapshot.val();
+
+                console.log(childKey);
+                const option = document.createElement("option");
+                option.value = childKey;
+                option.innerHTML = childKey;
+                dropdown.appendChild(option);
+            });
+        });
+
+        
         dataRef.once('value', function (snapshot) {
          var earnings = [];
+         var dates =[]
+         
             snapshot.forEach(function (childSnapshot) {
-                
+                dates.push(childSnapshot.key); 
                 childSnapshot.forEach(function (grandchildSnapshot) {
-                    if (grandchildSnapshot.key === "humidade") {
-                        humidade = grandchildSnapshot.val(); // assign first grandchild value
-                        earnings.push(humidade);
+                    if (grandchildSnapshot.key === "temperatura") {
+                        temperatura = grandchildSnapshot.val(); // assign first grandchild value
+                        earnings.push(temperatura);
                     }
                     
                     
@@ -345,8 +358,8 @@ const firebaseConfig = {
          });
         
          
-        
-        console.log(earnings);
+        console.log(dates);
+      
         // Set new default font family and font color to mimic Bootstrap's default styling
 Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
 Chart.defaults.global.defaultFontColor = '#858796';
@@ -381,7 +394,7 @@ var ctx = document.getElementById("myAreaChart");
 var myLineChart = new Chart(ctx, {
   type: 'line',
   data: {
-    labels: ["teste", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    labels: dates,
     datasets: [{
       label: "Earnings",
       lineTension: 0.3,
