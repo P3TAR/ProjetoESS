@@ -71,6 +71,7 @@
                         <h6 class="collapse-header">Custom Components:</h6>
                         <a class="collapse-item" href="chartsHumidade.html">Humidade</a>
                         <a class="collapse-item" href="chartsTemperatura.html">Temperatura</a>
+                        
                     </div>
                 </div>
             </li>
@@ -83,7 +84,11 @@
                     <span>Histórico</span></a>
             </li>
 
-
+            <li class="nav-item">
+                <a class="nav-link" href="map.html">
+                    <i class="fas fa-fw fa-table"></i>
+                    <span>Mapa</span></a>
+            </li>
             <!-- Divider -->
             <hr class="sidebar-divider d-none d-md-block">
 
@@ -122,7 +127,7 @@
                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="fas fa-bell fa-fw"></i>
                             <!-- Counter - Alerts -->
-                            <span class="badge badge-danger badge-counter">3+</span>
+                            <span class="badge badge-danger badge-counter" id="alertCounter">3+</span>
                         </a>
                         <!-- Dropdown - Alerts -->
                         <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
@@ -345,12 +350,13 @@
 
 
 function generateGraph(local){
-
+    
         dataRef.once('value', function (snapshot) {
 
             var earnings = [];
             var dates = [];
-            
+            earnings.length = 0;
+            dates.length = 0;
             snapshot.forEach(function (childSnapshot) {
                 
                 
@@ -358,7 +364,7 @@ function generateGraph(local){
                 childSnapshot.forEach(function (grandchildSnapshot) {
                     dates.push(grandchildSnapshot.key);
                     grandchildSnapshot.forEach(function(grandgrandchildSnapshot){
-                        if (grandgrandchildSnapshot.key === "humidade") {
+                        if (grandgrandchildSnapshot.key === "humidity") {
                         humidade = grandgrandchildSnapshot.val(); // assign first grandchild value
                         earnings.push(humidade);
                         
@@ -409,12 +415,13 @@ function generateGraph(local){
 
             // Area Chart Example
             var ctx = document.getElementById("myAreaChart");
+            
             var myLineChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: dates,
                     datasets: [{
-                        label: "Earnings",
+                        label: "Humidade",
                         lineTension: 0.3,
                         backgroundColor: "rgba(78, 115, 223, 0.05)",
                         borderColor: "rgba(78, 115, 223, 1)",
@@ -458,7 +465,7 @@ function generateGraph(local){
                                 padding: 10,
                                 // Include a dollar sign in the ticks
                                 callback: function (value, index, values) {
-                                    return 'ºC' + number_format(value);
+                                    return number_format(value) + '%';
                                 }
                             },
                             gridLines: {
@@ -490,7 +497,7 @@ function generateGraph(local){
                         callbacks: {
                             label: function (tooltipItem, chart) {
                                 var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
-                                return datasetLabel + ': ºC' + number_format(tooltipItem.yLabel);
+                                return datasetLabel +': '+ number_format(tooltipItem.yLabel) + '%';
                             }
                         }
                     }
@@ -500,10 +507,15 @@ function generateGraph(local){
 
     }
 
-
+   
         populateDropdown();
-        
         const loadButton = document.getElementById("loadButton");
+        window.addEventListener('load', function() {
+    setTimeout(function() {
+        loadButton.click();
+    }, 1000); // 1000 ms timeout
+});
+        
         loadButton.addEventListener("click", function () {
             
             performAction();
@@ -525,6 +537,69 @@ function generateGraph(local){
             generateGraph(selectedValue);
         }
         
+        dataRef.on('value', function (snapshot) {
+  var alertsDropdown = document.getElementById('alertsDropdown');
+  var alertCounter = document.getElementById('alertCounter');
+  var dropdownMenu = alertsDropdown.nextElementSibling;
+  var alertsHTML = '';
+  var numAlertsExceedingThreshold = 0; // Variable to store the count of alerts exceeding the threshold
+
+  snapshot.forEach(function (childSnapshot) {
+    var childKey = childSnapshot.key;
+    var lastGrandchildSnapshot = null; // variable to store the last grandchildSnapshot
+    var timestamp;
+    var humidade = '';
+    var temperatura = '';
+
+    childSnapshot.forEach(function (grandchildSnapshot) {
+      lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
+
+      timestamp = grandchildSnapshot.key;
+
+      grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
+        if (grandgrandchildSnapshot.key === "humidity") {
+          humidade = grandgrandchildSnapshot.val();
+        } else if (grandgrandchildSnapshot.key === "temperature") {
+          temperatura = grandgrandchildSnapshot.val();
+        }
+      });
+    });
+
+    if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
+      // Check if humidity exceeds 50
+      if (temperatura > 40) {
+        alertsHTML += `
+          <a class="dropdown-item d-flex align-items-center" href="#">
+            <div class="mr-3">
+              <div class="icon-circle bg-danger">
+                <i class="fas fa-exclamation-triangle text-white"></i>
+              </div>
+            </div>
+            <div>
+              <div class="medium text-balck-500">${childKey} : Risco de Incêndio</div>
+              <span class="font-weight-bold">Temperatura: ${temperatura}ºC</span>
+            </div>
+          </a>
+        `;
+        numAlertsExceedingThreshold++; // Increment the count of alerts exceeding the threshold
+      }
+    }
+  });
+
+  // Update the alerts dropdown menu
+  dropdownMenu.innerHTML = alertsHTML;
+
+  // Update the alert counter
+  if (numAlertsExceedingThreshold > 0) {
+    alertCounter.textContent = numAlertsExceedingThreshold > 99 ? '99+' : numAlertsExceedingThreshold.toString();
+    alertCounter.style.display = 'inline-block';
+  } else {
+    alertCounter.style.display = 'none';
+  }
+});
+
+
+   
     </script>
 
     <script src="js/demo/chart-pie-demo.js"></script>

@@ -3,6 +3,7 @@
 
 <head>
 
+
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -41,120 +42,97 @@
         var database = firebase.database();
 
         // Retrieve data from Firebase
+
         var dataRef = database.ref('/');
 
-        function generateTable(valor) {
 
+        dataRef.on('value', function (snapshot) {
+            var alertsDropdown = document.getElementById('alertsDropdown');
+            var alertCounter = document.getElementById('alertCounter');
+            var dropdownMenu = alertsDropdown.nextElementSibling;
+            var alertsHTML = '';
+            var numAlertsExceedingThreshold = 0; // Variable to store the count of alerts exceeding the threshold
 
-            dataRef.on('value', function (snapshot) {
-            var table = `
-            <!-- DataTales Example -->
-                 <div class="card shadow mb-4">
-                   
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                                <thead>
-                                    <tr>
-                                        <th>Local</th>
-                                        <th>Humidade</th>
-                                        <th>Temperatura</th>
-                                        <th>Data</th>
-                                    </tr>
-                                </thead>
-            `;
             snapshot.forEach(function (childSnapshot) {
                 var childKey = childSnapshot.key;
-                var humidade = ''; // initialize variables outside the loop
+                var lastGrandchildSnapshot = null; // variable to store the last grandchildSnapshot
+                var timestamp;
+                var humidade = '';
                 var temperatura = '';
-                var flag = 0;
-                if (childKey==valor){
 
                 childSnapshot.forEach(function (grandchildSnapshot) {
-                    var timestamp = grandchildSnapshot.key;
-                    grandchildSnapshot.forEach(function(grandgrandchildSnapshot){
-                    if (grandgrandchildSnapshot.key === "humidity") {
-                        humidade = grandgrandchildSnapshot.val(); // assign first grandchild value
-                        
-                    } else if (grandgrandchildSnapshot.key === "temperature") {
-                        console.log(grandgrandchildSnapshot.val())
-                        temperatura = grandgrandchildSnapshot.val(); // assign second grandchild value
-                    }
-                    console.log(grandgrandchildSnapshot.key);
-          
+                    lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
+
+                    timestamp = grandchildSnapshot.key;
+
+                    grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
+                        if (grandgrandchildSnapshot.key === "humidity") {
+                            humidade = grandgrandchildSnapshot.val();
+                        } else if (grandgrandchildSnapshot.key === "temperature") {
+                            temperatura = grandgrandchildSnapshot.val();
+                        }
+                    });
                 });
-                table += `
-                <tr>
-            <td>${childKey}</td>
-            <td>${humidade} %</td>
-            <td>${temperatura} ºC</td>
-            <td>${timestamp} </td>
-          </tr>
+
+                if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
+                    // Check if humidity exceeds 50
+                    if (temperatura > 40) {
+                        alertsHTML += `
+          <a class="dropdown-item d-flex align-items-center" href="#">
+            <div class="mr-3">
+              <div class="icon-circle bg-danger">
+                <i class="fas fa-exclamation-triangle text-white"></i>
+              </div>
+            </div>
+            <div>
+              <div class="medium text-balck-500">${childKey} : Risco de Incêndio</div>
+              <span class="font-weight-bold">Temperatura: ${temperatura}ºC</span>
+            </div>
+          </a>
         `;
+                        numAlertsExceedingThreshold++; // Increment the count of alerts exceeding the threshold
+                    }
+                }
             });
 
-                
+            // Update the alerts dropdown menu
+            dropdownMenu.innerHTML = alertsHTML;
 
-
-
-
-
-
-
-
-
-        }
-            });
-
-            // Close the table
-            table += `
-                  
-            </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Display data on webpage
-            document.getElementById('sensor-data').innerHTML = table;
-        }); 
-        }
-
-
+            // Update the alert counter
+            if (numAlertsExceedingThreshold > 0) {
+                alertCounter.textContent = numAlertsExceedingThreshold > 99 ? '99+' : numAlertsExceedingThreshold.toString();
+                alertCounter.style.display = 'inline-block';
+            } else {
+                alertCounter.style.display = 'none';
+            }
+        });
 
 
 
 
 
     </script>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+
+    <!-- Custom fonts for this template-->
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link
+        href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+        rel="stylesheet">
+
+    <!-- Custom styles for this template-->
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
+
     <style>
-        .custom-button {
-            background-color: #007bff;
-            color: #fff;
-            border-color: #007bff;
-            margin-bottom: 15px;
-        }
-
-        .dropdown-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 25%;
-        }
-
-        .dropdown-container .form-group {
-            margin-right: 10px;
-            flex: 1;
-        }
-
-        .container {
-            margin-left: 0px;
-            margin-bottom: 10px;
-            /* Adjust the left padding as needed */
+        #map {
+            height: 100%;
+            width: 100%;
         }
     </style>
+
+    <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+
 </head>
 
 <body id="page-top">
@@ -309,22 +287,7 @@
 
             </nav>
             <!-- End of Topbar -->
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-8">
-                        <div class="form-group">
-                            <select id="dropdown" class="form-control">
-
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <button id="loadButton" class="btn btn-primary btn-block custom-button">Load
-                            Options</button>
-                    </div>
-                </div>
-            </div>
-            <div id="sensor-data"></div>
+            <div id="map"></div>
 
 
 
@@ -372,133 +335,67 @@
     <!-- Custom scripts for all pages-->
     <script src="js/sb-admin-2.min.js"></script>
 
-    <!-- Page level plugins -->
-    <script src="vendor/chart.js/Chart.min.js"></script>
-
-    <!-- Page level custom scripts -->
-    <script src="js/demo/chart-area-demo.js"></script>
-    <script src="js/demo/chart-pie-demo.js"></script>
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDwdyEOB8v7pvGzd1IW0J58-S-LIM2Hlq8&callback=initMap">
+        </script>
 
     <script>
+        var markers = [];
+        function clearMarkers() {
+            for (var i = 0; i < markers.length; i++) {
+                markers[i].setMap(null);
+            }
+        }
 
-        function populateDropdown() {
-            // Retrieve the data from Firebase and populate the dropdown
-            dataRef.on("value", function (snapshot) {
-                const dropdown = document.getElementById("dropdown");
-
-                // Clear existing options
-
-
-                // Populate options with Firebase child values
-                snapshot.forEach(function (childSnapshot) {
-
-                    const childKey = childSnapshot.key;
-                    const childValue = childSnapshot.val();
-
-                    console.log(childKey);
-                    const option = document.createElement("option");
-                    option.value = childKey;
-                    option.innerHTML = childKey;
-                    dropdown.appendChild(option);
-                });
+        function initMap() {
+            var map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 39.462049, lng: -8.203171 },
+                zoom: 10
             });
 
 
 
+
+            dataRef.on('value', function (snapshot) {
+                clearMarkers();
+snapshot.forEach(function(children){
+                children.forEach(function (child) {
+                    
+                    var childs = child.val();
+                    console.log(childs.latitude);
+                    var marker = new google.maps.Marker({
+
+                        position: { lat: parseFloat(childs.latitude), lng: parseFloat(childs.longitude) },
+                        map: map
+                    });
+
+                    var infowindow = new google.maps.InfoWindow({
+                        content: "<b>" + children.key + "</b>" +
+                            "<br>temperatura: " + childs.temperature +
+                            "<br><b>humidade: " + childs.humidity +
+                            "<br> <b>Coordenadas:</b> <br> Latitude: " + childs.latitude +
+                            "<br> Longitude: " + childs.longitude
+
+                    });
+                    marker.addListener('click', function () {
+                        infowindow.open(map, marker);
+                    });
+
+
+                    markers.push(marker);
+
+
+                });
+            });
+            });
+
+            // Additional map customization or markers can be added here
         }
-        populateDropdown();
 
-        const loadButton = document.getElementById("loadButton");
-        window.addEventListener('load', function() {
-    setTimeout(function() {
-        loadButton.click();
-    }, 1000); // 1000 ms timeout
-});
-        loadButton.addEventListener("click", function () {
-
-            performAction();
-        });
-        // Action to perform when the button is clicked
-        function performAction() {
-            // Get the selected value from the dropdown
-            const dropdown = document.getElementById("dropdown");
-            const selectedValue = dropdown.value;
-
-            // Perform your desired action based on the selected value
-            if (selectedValue === "") {
-                // Do something when the selected value is empty
-                console.log("Selected value is empty");
-            } else {
-                // Do something else based on the selected value
-                console.log("Selected value:", selectedValue);
-            }
-            generateTable(selectedValue);
-        }
-
-        dataRef.on('value', function (snapshot) {
-  var alertsDropdown = document.getElementById('alertsDropdown');
-  var alertCounter = document.getElementById('alertCounter');
-  var dropdownMenu = alertsDropdown.nextElementSibling;
-  var alertsHTML = '';
-  var numAlertsExceedingThreshold = 0; // Variable to store the count of alerts exceeding the threshold
-
-  snapshot.forEach(function (childSnapshot) {
-    var childKey = childSnapshot.key;
-    var lastGrandchildSnapshot = null; // variable to store the last grandchildSnapshot
-    var timestamp;
-    var humidade = '';
-    var temperatura = '';
-
-    childSnapshot.forEach(function (grandchildSnapshot) {
-      lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
-
-      timestamp = grandchildSnapshot.key;
-
-      grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
-        if (grandgrandchildSnapshot.key === "humidity") {
-          humidade = grandgrandchildSnapshot.val();
-        } else if (grandgrandchildSnapshot.key === "temperature") {
-          temperatura = grandgrandchildSnapshot.val();
-        }
-      });
-    });
-
-    if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
-      // Check if humidity exceeds 50
-      if (temperatura > 40) {
-        alertsHTML += `
-          <a class="dropdown-item d-flex align-items-center" href="#">
-            <div class="mr-3">
-              <div class="icon-circle bg-danger">
-                <i class="fas fa-exclamation-triangle text-white"></i>
-              </div>
-            </div>
-            <div>
-              <div class="medium text-balck-500">${childKey} : Risco de Incêndio</div>
-              <span class="font-weight-bold">Temperatura: ${temperatura}ºC</span>
-            </div>
-          </a>
-        `;
-        numAlertsExceedingThreshold++; // Increment the count of alerts exceeding the threshold
-      }
-    }
-  });
-
-  // Update the alerts dropdown menu
-  dropdownMenu.innerHTML = alertsHTML;
-
-  // Update the alert counter
-  if (numAlertsExceedingThreshold > 0) {
-    alertCounter.textContent = numAlertsExceedingThreshold > 99 ? '99+' : numAlertsExceedingThreshold.toString();
-    alertCounter.style.display = 'inline-block';
-  } else {
-    alertCounter.style.display = 'none';
-  }
-});
-
-
-   
+        google.maps.event.addDomListener(window, 'load', initMap);
     </script>
+
+
 </body>
 
 </html>

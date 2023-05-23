@@ -41,96 +41,131 @@
         var database = firebase.database();
 
         // Retrieve data from Firebase
-        var dataRef = database.ref('sensor');
-        
+        var dataRef = database.ref('/');
         dataRef.on('value', function (snapshot) {
-            var table = `
-            <!-- DataTales Example -->
-                 <div class="card shadow mb-4">
-                   
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                                <thead>
-                                    <tr>
-                                        <th>Local</th>
-                                        <th>Humidade</th>
-                                        <th>Temperatura</th>
-                                        
-                                    </tr>
-                                </thead>
-            `;
-            snapshot.forEach(function (childSnapshot) {
-                var childKey = childSnapshot.key;
-                var humidade = ''; // initialize variables outside the loop
-                var temperatura = '';
-                var flag = 0;
+  var table = `
+  <!-- DataTales Example -->
+  <div class="card shadow mb-4">
+      <div class="card-body">
+          <div class="table-responsive">
+              <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                  <thead>
+                      <tr>
+                          <th>Local</th>
+                          <th>Humidade</th>
+                          <th>Temperatura</th>
+                          <th>Data</th>
+                      </tr>
+                  </thead>
+  `;
+  
+  snapshot.forEach(function (childSnapshot) {
+    var childKey = childSnapshot.key;
+    var lastGrandchildSnapshot = null; // variable to store the last grandchildSnapshot
+    var timestamp;
+    var humidade = '';
+    var temperatura = '';
 
+    childSnapshot.forEach(function (grandchildSnapshot) {
+      lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
 
-                childSnapshot.forEach(function (grandchildSnapshot) {
-                    if (grandchildSnapshot.key === "humidade") {
-                        humidade = grandchildSnapshot.val(); // assign first grandchild value
-                        
-                    } else if (grandchildSnapshot.key === "temperatura") {
-                        console.log(grandchildSnapshot.val())
-                        temperatura = grandchildSnapshot.val(); // assign second grandchild value
-                    }
-                });
+      timestamp = grandchildSnapshot.key;
 
-                table += `
-          <tr>
-            <td>${childKey}</td>
-            <td>${humidade} %</td>
-            <td>${temperatura} ºC</td>
-          </tr>
+      grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
+        if (grandgrandchildSnapshot.key === "humidity") {
+          humidade = grandgrandchildSnapshot.val();
+        } else if (grandgrandchildSnapshot.key === "temperature") {
+          temperatura = grandgrandchildSnapshot.val();
+        }
+      });
+    });
+
+    if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
+      table += `
+      <tr>
+          <td>${childKey}</td>
+          <td>${humidade} %</td>
+          <td>${temperatura} ºC</td>
+          <td>${timestamp}</td>
+      </tr>
+      `;
+    }
+  });
+
+  // Close the table
+  table += `
+          </tbody>
+      </table>
+  </div>
+  </div>
+  </div>
+  `;
+
+  // Display data on the webpage
+  document.getElementById('sensor-data').innerHTML = table;
+});
+dataRef.on('value', function (snapshot) {
+  var alertsDropdown = document.getElementById('alertsDropdown');
+  var alertCounter = document.getElementById('alertCounter');
+  var dropdownMenu = alertsDropdown.nextElementSibling;
+  var alertsHTML = '';
+  var numAlertsExceedingThreshold = 0; // Variable to store the count of alerts exceeding the threshold
+
+  snapshot.forEach(function (childSnapshot) {
+    var childKey = childSnapshot.key;
+    var lastGrandchildSnapshot = null; // variable to store the last grandchildSnapshot
+    var timestamp;
+    var humidade = '';
+    var temperatura = '';
+
+    childSnapshot.forEach(function (grandchildSnapshot) {
+      lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
+
+      timestamp = grandchildSnapshot.key;
+
+      grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
+        if (grandgrandchildSnapshot.key === "humidity") {
+          humidade = grandgrandchildSnapshot.val();
+        } else if (grandgrandchildSnapshot.key === "temperature") {
+          temperatura = grandgrandchildSnapshot.val();
+        }
+      });
+    });
+
+    if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
+      // Check if humidity exceeds 50
+      if (temperatura > 40) {
+        alertsHTML += `
+          <a class="dropdown-item d-flex align-items-center" href="#">
+            <div class="mr-3">
+              <div class="icon-circle bg-danger">
+                <i class="fas fa-exclamation-triangle text-white"></i>
+              </div>
+            </div>
+            <div>
+              <div class="medium text-balck-500">${childKey} : Risco de Incêndio</div>
+              <span class="font-weight-bold">Temperatura: ${temperatura}ºC</span>
+            </div>
+          </a>
         `;
+        numAlertsExceedingThreshold++; // Increment the count of alerts exceeding the threshold
+      }
+    }
+  });
 
+  // Update the alerts dropdown menu
+  dropdownMenu.innerHTML = alertsHTML;
 
-
-
-
-
-
-
-
-
-            });
-
-            // Close the table
-            table += `
-                  
-            </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Display data on webpage
-            document.getElementById('sensor-data').innerHTML = table;
-        });
-
-        dataRef.on('value', function (snapshot) {
-         var earnings = [];
-            snapshot.forEach(function (childSnapshot) {
-                
-                childSnapshot.forEach(function (grandchildSnapshot) {
-                    if (grandchildSnapshot.key === "humidade") {
-                        humidade = grandchildSnapshot.val(); // assign first grandchild value
-                        earnings.push(humidade);
-                    }
-                    
-                    
-                });
-            
-              
-         });
-        
-         
-        
+  // Update the alert counter
+  if (numAlertsExceedingThreshold > 0) {
+    alertCounter.textContent = numAlertsExceedingThreshold > 99 ? '99+' : numAlertsExceedingThreshold.toString();
+    alertCounter.style.display = 'inline-block';
+  } else {
+    alertCounter.style.display = 'none';
+  }
 });
 
-    
+
    
     
 
@@ -194,7 +229,11 @@
             <i class="fas fa-fw fa-table"></i>
             <span>Histórico</span></a>
     </li>
-
+    <li class="nav-item">
+        <a class="nav-link" href="map.html">
+            <i class="fas fa-fw fa-table"></i>
+            <span>Mapa</span></a>
+    </li>
     
     <!-- Divider -->
     <hr class="sidebar-divider d-none d-md-block">
@@ -233,7 +272,7 @@
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="fas fa-bell fa-fw"></i>
                                 <!-- Counter - Alerts -->
-                                <span class="badge badge-danger badge-counter">3+</span>
+                                <span class="badge badge-danger badge-counter" id="alertCounter">3+</span>
                             </a>
                             <!-- Dropdown - Alerts -->
                             <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
