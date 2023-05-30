@@ -43,7 +43,7 @@
         // Retrieve data from Firebase
         var dataRef = database.ref('/');
         dataRef.on('value', function (snapshot) {
-  var table = `
+            var table = `
   <!-- DataTales Example -->
   <div class="card shadow mb-4">
       <div class="card-body">
@@ -58,30 +58,30 @@
                       </tr>
                   </thead>
   `;
-  
-  snapshot.forEach(function (childSnapshot) {
-    var childKey = childSnapshot.key;
-    var lastGrandchildSnapshot = null; // variable to store the last grandchildSnapshot
-    var timestamp;
-    var humidade = '';
-    var temperatura = '';
 
-    childSnapshot.forEach(function (grandchildSnapshot) {
-      lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
+            snapshot.forEach(function (childSnapshot) {
+                var childKey = childSnapshot.key;
+                var lastGrandchildSnapshot = null; // variable to store the last grandchildSnapshot
+                var timestamp;
+                var humidade = '';
+                var temperatura = '';
 
-      timestamp = grandchildSnapshot.key;
+                childSnapshot.forEach(function (grandchildSnapshot) {
+                    lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
 
-      grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
-        if (grandgrandchildSnapshot.key === "humidity") {
-          humidade = grandgrandchildSnapshot.val();
-        } else if (grandgrandchildSnapshot.key === "temperature") {
-          temperatura = grandgrandchildSnapshot.val();
-        }
-      });
-    });
+                    timestamp = grandchildSnapshot.key;
 
-    if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
-      table += `
+                    grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
+                        if (grandgrandchildSnapshot.key === "humidity") {
+                            humidade = grandgrandchildSnapshot.val();
+                        } else if (grandgrandchildSnapshot.key === "temperature") {
+                            temperatura = grandgrandchildSnapshot.val();
+                        }
+                    });
+                });
+
+                if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
+                    table += `
       <tr>
           <td>${childKey}</td>
           <td>${humidade} %</td>
@@ -89,11 +89,11 @@
           <td>${timestamp}</td>
       </tr>
       `;
-    }
-  });
+                }
+            });
 
-  // Close the table
-  table += `
+            // Close the table
+            table += `
           </tbody>
       </table>
   </div>
@@ -101,41 +101,41 @@
   </div>
   `;
 
-  // Display data on the webpage
-  document.getElementById('sensor-data').innerHTML = table;
-});
-dataRef.on('value', function (snapshot) {
-  var alertsDropdown = document.getElementById('alertsDropdown');
-  var alertCounter = document.getElementById('alertCounter');
-  var dropdownMenu = alertsDropdown.nextElementSibling;
-  var alertsHTML = '';
-  var numAlertsExceedingThreshold = 0; // Variable to store the count of alerts exceeding the threshold
+            // Display data on the webpage
+            document.getElementById('sensor-data').innerHTML = table;
+        });
+        dataRef.on('value', function (snapshot) {
+            var alertsDropdown = document.getElementById('alertsDropdown');
+            var alertCounter = document.getElementById('alertCounter');
+            var dropdownMenu = alertsDropdown.nextElementSibling;
+            var alertsHTML = '';
+            var numAlertsExceedingThreshold = 0; // Variable to store the count of alerts exceeding the threshold
 
-  snapshot.forEach(function (childSnapshot) {
-    var childKey = childSnapshot.key;
-    var lastGrandchildSnapshot = null; // variable to store the last grandchildSnapshot
-    var timestamp;
-    var humidade = '';
-    var temperatura = '';
+            snapshot.forEach(function (childSnapshot) {
+                var childKey = childSnapshot.key;
+                var lastGrandchildSnapshot = null; // variable to store the last grandchildSnapshot
+                var timestamp;
+                var humidade = '';
+                var temperatura = '';
 
-    childSnapshot.forEach(function (grandchildSnapshot) {
-      lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
+                childSnapshot.forEach(function (grandchildSnapshot) {
+                    lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
 
-      timestamp = grandchildSnapshot.key;
+                    timestamp = grandchildSnapshot.key;
 
-      grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
-        if (grandgrandchildSnapshot.key === "humidity") {
-          humidade = grandgrandchildSnapshot.val();
-        } else if (grandgrandchildSnapshot.key === "temperature") {
-          temperatura = grandgrandchildSnapshot.val();
-        }
-      });
-    });
+                    grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
+                        if (grandgrandchildSnapshot.key === "humidity") {
+                            humidade = grandgrandchildSnapshot.val();
+                        } else if (grandgrandchildSnapshot.key === "temperature") {
+                            temperatura = grandgrandchildSnapshot.val();
+                        }
+                    });
+                });
 
-    if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
-      // Check if humidity exceeds 50
-      if (temperatura > 40) {
-        alertsHTML += `
+                if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
+                    // Check if humidity exceeds 50
+                    if (temperatura > 40) {
+                        alertsHTML += `
           <a class="dropdown-item d-flex align-items-center" href="#">
             <div class="mr-3">
               <div class="icon-circle bg-danger">
@@ -148,187 +148,204 @@ dataRef.on('value', function (snapshot) {
             </div>
           </a>
         `;
-        numAlertsExceedingThreshold++; // Increment the count of alerts exceeding the threshold
-      }
-    }
-  });
+                        numAlertsExceedingThreshold++; // Increment the count of alerts exceeding the threshold
 
-  // Update the alerts dropdown menu
-  dropdownMenu.innerHTML = alertsHTML;
+                        // Make an AJAX request to the server-side script that handles email sending
+                        var xhr = new XMLHttpRequest();
+                        xhr.open('POST', 'send_email.php', true);
+                        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                        xhr.onreadystatechange = function () {
+                            if (xhr.readyState === 4 && xhr.status === 200) {
+                                console.log('Email sent successfully!');
+                            }
+                        };
+                        xhr.send('recipient=pedromoreiralopes1@gmail.com&subject=Alert&message=asdasd' + encodeURIComponent(`Alert: ${childKey} - Temperature exceeds 40°C`));
 
-  // Update the alert counter
-  if (numAlertsExceedingThreshold > 0) {
-    alertCounter.textContent = numAlertsExceedingThreshold > 99 ? '99+' : numAlertsExceedingThreshold.toString();
-    alertCounter.style.display = 'inline-block';
-  } else {
-    alertCounter.style.display = 'none';
-  }
-});
+                    }
+                }
+            });
+
+            // Update the alerts dropdown menu
+            dropdownMenu.innerHTML = alertsHTML;
+
+            // Update the alert counter
+            if (numAlertsExceedingThreshold > 0) {
+                alertCounter.textContent = numAlertsExceedingThreshold > 99 ? '99+' : numAlertsExceedingThreshold.toString();
+                alertCounter.style.display = 'inline-block';
+            } else {
+                alertCounter.style.display = 'none';
+            }
+        });
 
 
-   
-    
+
+
 
     </script>
-    
+
 </head>
 
 <body id="page-top">
 
     <!-- Page Wrapper -->
     <div id="wrapper">
-<!-- Sidebar -->
-<ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+        <!-- Sidebar -->
+        <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
-    <!-- Sidebar - Brand -->
-    <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
-        <div class="sidebar-brand-icon rotate-n-15">
-            
-        </div>
-        <div class="sidebar-brand-text mx-3">Projeto ESS </div>
-    </a>
+            <!-- Sidebar - Brand -->
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.html">
+                <div class="sidebar-brand-icon rotate-n-15">
 
-    <!-- Divider -->
-    <hr class="sidebar-divider my-0">
+                </div>
+                <div class="sidebar-brand-text mx-3">Projeto ESS </div>
+            </a>
 
-    <!-- Nav Item - Dashboard -->
-    <li class="nav-item active">
-        <a class="nav-link" href="index.html">
-            <i class="fas fa-fw fa-tachometer-alt"></i>
-            <span>Dashboard</span></a>
-    </li>
+            <!-- Divider -->
+            <hr class="sidebar-divider my-0">
 
-    <!-- Divider -->
-    <hr class="sidebar-divider">
+            <!-- Nav Item - Dashboard -->
+            <li class="nav-item active">
+                <a class="nav-link" href="index.html">
+                    <i class="fas fa-fw fa-tachometer-alt"></i>
+                    <span>Dashboard</span></a>
+            </li>
 
-    <!-- Heading -->
-    <div class="sidebar-heading">
-        Interface
-    </div>
+            <!-- Divider -->
+            <hr class="sidebar-divider">
 
-    <!-- Nav Item - Pages Collapse Menu -->
-    <li class="nav-item">
-        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
-            aria-expanded="true" aria-controls="collapseTwo">
-            <i class="fas fa-fw fa-chart-area"></i>
-            <span>Gráficos</span>
-        </a>
-        <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
-            <div class="bg-white py-2 collapse-inner rounded">
-                <h6 class="collapse-header">Custom Components:</h6>
-                <a class="collapse-item" href="chartsHumidade.html">Humidade</a>
-                <a class="collapse-item" href="chartsTemperatura.html">Temperatura</a>
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Interface
             </div>
-        </div>
-    </li>
+
+            <!-- Nav Item - Pages Collapse Menu -->
+            <li class="nav-item">
+                <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
+                    aria-expanded="true" aria-controls="collapseTwo">
+                    <i class="fas fa-fw fa-chart-area"></i>
+                    <span>Gráficos</span>
+                </a>
+                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+                    <div class="bg-white py-2 collapse-inner rounded">
+                        <h6 class="collapse-header">Custom Components:</h6>
+                        <a class="collapse-item" href="chartsHumidade.html">Humidade</a>
+                        <a class="collapse-item" href="chartsTemperatura.html">Temperatura</a>
+                    </div>
+                </div>
+            </li>
 
 
-    <!-- Nav Item - Tables -->
-    <li class="nav-item">
-        <a class="nav-link" href="Historico.html">
-            <i class="fas fa-fw fa-table"></i>
-            <span>Histórico</span></a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link" href="map.html">
-            <i class="fas fa-fw fa-table"></i>
-            <span>Mapa</span></a>
-    </li>
-    
-    <!-- Divider -->
-    <hr class="sidebar-divider d-none d-md-block">
+            <!-- Nav Item - Tables -->
+            <li class="nav-item">
+                <a class="nav-link" href="Historico.html">
+                    <i class="fas fa-fw fa-table"></i>
+                    <span>Histórico</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="map.html">
+                    <i class="fas fa-fw fa-table"></i>
+                    <span>Mapa</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="subscription.html">
+                    <i class="fas fa-fw fa-table"></i>
+                    <span>Subscrição Alertas</span></a>
+            </li>
 
-    <!-- Sidebar Toggler (Sidebar) -->
-    <div class="text-center d-none d-md-inline">
-        <button class="rounded-circle border-0" id="sidebarToggle"></button>
-    </div>
+            <!-- Divider -->
+            <hr class="sidebar-divider d-none d-md-block">
+
+            <!-- Sidebar Toggler (Sidebar) -->
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
 
 
-</ul>
-<!-- End of Sidebar -->
+        </ul>
+        <!-- End of Sidebar -->
 
         <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
 
             <!-- Main Content -->
-            
-                <!-- Topbar -->
-                <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-                    <h6><b></b></h6>
-                    <!-- Sidebar Toggle (Topbar) -->
-                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
-                        <i class="fa fa-bars"></i>
-                    </button>
 
-                  
-                    <!-- Topbar Navbar -->
-                    <ul class="navbar-nav ml-auto">
-                        
-                       
+            <!-- Topbar -->
+            <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+                <h6><b></b></h6>
+                <!-- Sidebar Toggle (Topbar) -->
+                <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                    <i class="fa fa-bars"></i>
+                </button>
 
-                        <!-- Nav Item - Alerts -->
-                        <li class="nav-item dropdown no-arrow mx-1">
-                            <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button"
-                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fas fa-bell fa-fw"></i>
-                                <!-- Counter - Alerts -->
-                                <span class="badge badge-danger badge-counter" id="alertCounter">3+</span>
+
+                <!-- Topbar Navbar -->
+                <ul class="navbar-nav ml-auto">
+
+
+
+                    <!-- Nav Item - Alerts -->
+                    <li class="nav-item dropdown no-arrow mx-1">
+                        <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-bell fa-fw"></i>
+                            <!-- Counter - Alerts -->
+                            <span class="badge badge-danger badge-counter" id="alertCounter">3+</span>
+                        </a>
+                        <!-- Dropdown - Alerts -->
+                        <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                            aria-labelledby="alertsDropdown">
+                            <h6 class="dropdown-header">
+                                Alerts Center
+                            </h6>
+                            <!-- Alert -->
+                            <a class="dropdown-item d-flex align-items-center" href="">
+                                <div class="mr-3">
+                                    <div class="icon-circle bg-primary">
+                                        <i class="fas fa-file-alt text-white"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="small text-gray-500">December 12, 2019</div>
+                                    <span class="font-weight-bold">A new monthly report is ready to download!</span>
+                                </div>
                             </a>
-                            <!-- Dropdown - Alerts -->
-                            <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
-                                aria-labelledby="alertsDropdown">
-                                <h6 class="dropdown-header">
-                                    Alerts Center
-                                </h6>
-                                <!-- Alert -->
-                                <a class="dropdown-item d-flex align-items-center" href="">
-                                    <div class="mr-3">
-                                        <div class="icon-circle bg-primary">
-                                            <i class="fas fa-file-alt text-white"></i>
-                                        </div>
+                            <!--  Alert -->
+                            <a class="dropdown-item d-flex align-items-center" href="#">
+                                <div class="mr-3">
+                                    <div class="icon-circle bg-success">
+                                        <i class="fas fa-donate text-white"></i>
                                     </div>
-                                    <div>
-                                        <div class="small text-gray-500">December 12, 2019</div>
-                                        <span class="font-weight-bold">A new monthly report is ready to download!</span>
+                                </div>
+                                <div>
+                                    <div class="small text-gray-500">December 7, 2019</div>
+                                    $290.29 has been deposited into your account!
+                                </div>
+                            </a>
+                            <a class="dropdown-item d-flex align-items-center" href="#">
+                                <div class="mr-3">
+                                    <div class="icon-circle bg-warning">
+                                        <i class="fas fa-exclamation-triangle text-white"></i>
                                     </div>
-                                </a>
-                                <!--  Alert -->
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="mr-3">
-                                        <div class="icon-circle bg-success">
-                                            <i class="fas fa-donate text-white"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="small text-gray-500">December 7, 2019</div>
-                                        $290.29 has been deposited into your account!
-                                    </div>
-                                </a>
-                                <a class="dropdown-item d-flex align-items-center" href="#">
-                                    <div class="mr-3">
-                                        <div class="icon-circle bg-warning">
-                                            <i class="fas fa-exclamation-triangle text-white"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="small text-gray-500">December 2, 2019</div>
-                                        Spending Alert: We've noticed unusually high spending for your account.
-                                    </div>
-                                </a>
-                                <a class="dropdown-item text-center small text-gray-500" href="#">Show All Alerts</a>
-                            </div>
-                        </li>
+                                </div>
+                                <div>
+                                    <div class="small text-gray-500">December 2, 2019</div>
+                                    Spending Alert: We've noticed unusually high spending for your account.
+                                </div>
+                            </a>
+                            <a class="dropdown-item text-center small text-gray-500" href="#">Show All Alerts</a>
+                        </div>
+                    </li>
 
-                        
 
-                    </ul>
 
-                </nav>
-                <!-- End of Topbar -->
-                <div id="sensor-data"></div>
-                 
-                                
-                              
+                </ul>
+
+            </nav>
+            <!-- End of Topbar -->
+            <div id="sensor-data"></div>
+
+
+
             <!-- End of Main Content -->
 
 

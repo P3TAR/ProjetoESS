@@ -10,7 +10,7 @@
     <meta name="author" content="">
 
     <title>SB Admin 2 - Dashboard</title>
-
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <!-- Custom fonts for this template-->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <link
@@ -40,121 +40,104 @@
         // Get a reference to the database service
         var database = firebase.database();
 
+        function validateEmail(email) {
+        // Email validation regular expression
+        var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+      }
+        function sendValueToFirebase() {
+        var email = document.getElementById('emailInput').value;
+
+        if (!validateEmail(email)) {
+          alert('Invalid email format!');
+          return;
+        }
+
+        // Check if the email already exists in the database
+        firebase.database().ref('Emails').orderByValue().equalTo(email).once('value', function(snapshot) {
+          if (snapshot.exists()) {
+            alert('Email already exists!');
+          } else {
+            // Email does not exist, save it to the database
+            firebase.database().ref('Emails').push().set(email);
+            alert('Email saved successfully!');
+          }
+        });
+      }
+
+
+
         // Retrieve data from Firebase
         var dataRef = database.ref('/');
+        
 
-        function generateTable(valor) {
+        dataRef.on('value', function (snapshot) {
+            var alertsDropdown = document.getElementById('alertsDropdown');
+            var alertCounter = document.getElementById('alertCounter');
+            var dropdownMenu = alertsDropdown.nextElementSibling;
+            var alertsHTML = '';
+            var numAlertsExceedingThreshold = 0; // Variable to store the count of alerts exceeding the threshold
 
-
-            dataRef.on('value', function (snapshot) {
-            var table = `
-            <!-- DataTales Example -->
-                 <div class="card shadow mb-4">
-                   
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                                <thead>
-                                    <tr>
-                                        <th>Local</th>
-                                        <th>Humidade</th>
-                                        <th>Temperatura</th>
-                                        <th>Data</th>
-                                    </tr>
-                                </thead>
-            `;
             snapshot.forEach(function (childSnapshot) {
                 var childKey = childSnapshot.key;
-                var humidade = ''; // initialize variables outside the loop
+                var lastGrandchildSnapshot = null; // variable to store the last grandchildSnapshot
+                var timestamp;
+                var humidade = '';
                 var temperatura = '';
-                var flag = 0;
-                if (childKey==valor){
 
                 childSnapshot.forEach(function (grandchildSnapshot) {
-                    var timestamp = grandchildSnapshot.key;
-                    grandchildSnapshot.forEach(function(grandgrandchildSnapshot){
-                    if (grandgrandchildSnapshot.key === "humidity") {
-                        humidade = grandgrandchildSnapshot.val(); // assign first grandchild value
-                        
-                    } else if (grandgrandchildSnapshot.key === "temperature") {
-                        console.log(grandgrandchildSnapshot.val())
-                        temperatura = grandgrandchildSnapshot.val(); // assign second grandchild value
-                    }
-                    console.log(grandgrandchildSnapshot.key);
-          
+                    lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
+
+                    timestamp = grandchildSnapshot.key;
+
+                    grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
+                        if (grandgrandchildSnapshot.key === "humidity") {
+                            humidade = grandgrandchildSnapshot.val();
+                        } else if (grandgrandchildSnapshot.key === "temperature") {
+                            temperatura = grandgrandchildSnapshot.val();
+                        }
+                    });
                 });
-                table += `
-                <tr>
-            <td>${childKey}</td>
-            <td>${humidade} %</td>
-            <td>${temperatura} ºC</td>
-            <td>${timestamp} </td>
-          </tr>
+
+                if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
+                    // Check if humidity exceeds 50
+                    if (temperatura > 40) {
+                        alertsHTML += `
+          <a class="dropdown-item d-flex align-items-center" href="#">
+            <div class="mr-3">
+              <div class="icon-circle bg-danger">
+                <i class="fas fa-exclamation-triangle text-white"></i>
+              </div>
+            </div>
+            <div>
+              <div class="medium text-balck-500">${childKey} : Risco de Incêndio</div>
+              <span class="font-weight-bold">Temperatura: ${temperatura}ºC</span>
+            </div>
+          </a>
         `;
+                        numAlertsExceedingThreshold++; // Increment the count of alerts exceeding the threshold
+                    }
+                }
             });
 
-                
+            // Update the alerts dropdown menu
+            dropdownMenu.innerHTML = alertsHTML;
 
-
-
-
-
-
-
-
-
-        }
-            });
-
-            // Close the table
-            table += `
-                  
-            </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Display data on webpage
-            document.getElementById('sensor-data').innerHTML = table;
-        }); 
-        }
-
-
+            // Update the alert counter
+            if (numAlertsExceedingThreshold > 0) {
+                alertCounter.textContent = numAlertsExceedingThreshold > 99 ? '99+' : numAlertsExceedingThreshold.toString();
+                alertCounter.style.display = 'inline-block';
+            } else {
+                alertCounter.style.display = 'none';
+            }
+        });
 
 
 
 
 
     </script>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
-    <style>
-        .custom-button {
-            background-color: #007bff;
-            color: #fff;
-            border-color: #007bff;
-            margin-bottom: 15px;
-        }
 
-        .dropdown-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 25%;
-        }
-
-        .dropdown-container .form-group {
-            margin-right: 10px;
-            flex: 1;
-        }
-
-        .container {
-            margin-left: 0px;
-            margin-bottom: 10px;
-            /* Adjust the left padding as needed */
-        }
-    </style>
 </head>
 
 <body id="page-top">
@@ -223,6 +206,7 @@
                     <i class="fas fa-fw fa-table"></i>
                     <span>Subscrição Alertas</span></a>
             </li>
+
             <!-- Divider -->
             <hr class="sidebar-divider d-none d-md-block">
 
@@ -313,23 +297,22 @@
 
             </nav>
             <!-- End of Topbar -->
+            <div id="sensor-data"></div>
             <div class="container">
+                Insira o seu Email:
                 <div class="row">
-                    <div class="col-md-8">
-                        <div class="form-group">
-                            <select id="dropdown" class="form-control">
 
-                            </select>
+                    <div class="col-md-6">
+
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="emailInput" placeholder="Enter text">
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <button id="loadButton" class="btn btn-primary btn-block custom-button">Load
-                            Options</button>
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-primary" onclick="sendValueToFirebase()">Submit</button>
                     </div>
                 </div>
             </div>
-            <div id="sensor-data"></div>
-
 
 
             <!-- End of Main Content -->
@@ -383,126 +366,9 @@
     <script src="js/demo/chart-area-demo.js"></script>
     <script src="js/demo/chart-pie-demo.js"></script>
 
-    <script>
-
-        function populateDropdown() {
-            // Retrieve the data from Firebase and populate the dropdown
-            dataRef.on("value", function (snapshot) {
-                const dropdown = document.getElementById("dropdown");
-
-                // Clear existing options
-
-
-                // Populate options with Firebase child values
-                snapshot.forEach(function (childSnapshot) {
-
-                    const childKey = childSnapshot.key;
-                    const childValue = childSnapshot.val();
-
-                    console.log(childKey);
-                    const option = document.createElement("option");
-                    option.value = childKey;
-                    option.innerHTML = childKey;
-                    dropdown.appendChild(option);
-                });
-            });
-
-
-
-        }
-        populateDropdown();
-
-        const loadButton = document.getElementById("loadButton");
-        window.addEventListener('load', function() {
-    setTimeout(function() {
-        loadButton.click();
-    }, 1000); // 1000 ms timeout
-});
-        loadButton.addEventListener("click", function () {
-
-            performAction();
-        });
-        // Action to perform when the button is clicked
-        function performAction() {
-            // Get the selected value from the dropdown
-            const dropdown = document.getElementById("dropdown");
-            const selectedValue = dropdown.value;
-
-            // Perform your desired action based on the selected value
-            if (selectedValue === "") {
-                // Do something when the selected value is empty
-                console.log("Selected value is empty");
-            } else {
-                // Do something else based on the selected value
-                console.log("Selected value:", selectedValue);
-            }
-            generateTable(selectedValue);
-        }
-
-        dataRef.on('value', function (snapshot) {
-  var alertsDropdown = document.getElementById('alertsDropdown');
-  var alertCounter = document.getElementById('alertCounter');
-  var dropdownMenu = alertsDropdown.nextElementSibling;
-  var alertsHTML = '';
-  var numAlertsExceedingThreshold = 0; // Variable to store the count of alerts exceeding the threshold
-
-  snapshot.forEach(function (childSnapshot) {
-    var childKey = childSnapshot.key;
-    var lastGrandchildSnapshot = null; // variable to store the last grandchildSnapshot
-    var timestamp;
-    var humidade = '';
-    var temperatura = '';
-
-    childSnapshot.forEach(function (grandchildSnapshot) {
-      lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
-
-      timestamp = grandchildSnapshot.key;
-
-      grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
-        if (grandgrandchildSnapshot.key === "humidity") {
-          humidade = grandgrandchildSnapshot.val();
-        } else if (grandgrandchildSnapshot.key === "temperature") {
-          temperatura = grandgrandchildSnapshot.val();
-        }
-      });
-    });
-
-    if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
-      // Check if humidity exceeds 50
-      if (temperatura > 40) {
-        alertsHTML += `
-          <a class="dropdown-item d-flex align-items-center" href="#">
-            <div class="mr-3">
-              <div class="icon-circle bg-danger">
-                <i class="fas fa-exclamation-triangle text-white"></i>
-              </div>
-            </div>
-            <div>
-              <div class="medium text-balck-500">${childKey} : Risco de Incêndio</div>
-              <span class="font-weight-bold">Temperatura: ${temperatura}ºC</span>
-            </div>
-          </a>
-        `;
-        numAlertsExceedingThreshold++; // Increment the count of alerts exceeding the threshold
-      }
-    }
-  });
-
-  // Update the alerts dropdown menu
-  dropdownMenu.innerHTML = alertsHTML;
-
-  // Update the alert counter
-  if (numAlertsExceedingThreshold > 0) {
-    alertCounter.textContent = numAlertsExceedingThreshold > 99 ? '99+' : numAlertsExceedingThreshold.toString();
-    alertCounter.style.display = 'inline-block';
-  } else {
-    alertCounter.style.display = 'none';
-  }
-});
-
-
-   
-    </script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 </body>
 
 </html>

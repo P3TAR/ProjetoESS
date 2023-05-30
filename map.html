@@ -197,6 +197,11 @@
                     <span>Mapa</span></a>
             </li>
 
+            <li class="nav-item">
+                <a class="nav-link" href="subscription.html">
+                    <i class="fas fa-fw fa-table"></i>
+                    <span>Subscrição Alertas</span></a>
+            </li>
             <!-- Divider -->
             <hr class="sidebar-divider d-none d-md-block">
 
@@ -355,39 +360,49 @@
 
 
 
+            dataRef.on('value', function(snapshot) {
+  clearMarkers();
+  snapshot.forEach(function(children) {
+    var lastChild;
+    
+    children.forEach(function(child) {
+      lastChild = child.val();
+    });
 
-            dataRef.on('value', function (snapshot) {
-                clearMarkers();
-snapshot.forEach(function(children){
-                children.forEach(function (child) {
-                    
-                    var childs = child.val();
-                    console.log(childs.latitude);
-                    var marker = new google.maps.Marker({
+    // Access the values of the last child
+    var latitude = lastChild.latitude;
+    var longitude = lastChild.longitude;
+    var temperature = lastChild.temperature;
+    var humidity = lastChild.humidity;
 
-                        position: { lat: parseFloat(childs.latitude), lng: parseFloat(childs.longitude) },
-                        map: map
-                    });
+    console.log(latitude);
+    console.log(longitude);
+    console.log(temperature);
+    console.log(humidity);
+    
+    // Create marker and info window based on the last child's values
+    
+    var marker = new google.maps.Marker({
+      position: { lat: parseFloat(latitude), lng: parseFloat(longitude) },
+      map: map
+    });
 
-                    var infowindow = new google.maps.InfoWindow({
-                        content: "<b>" + children.key + "</b>" +
-                            "<br>temperatura: " + childs.temperature +
-                            "<br><b>humidade: " + childs.humidity +
-                            "<br> <b>Coordenadas:</b> <br> Latitude: " + childs.latitude +
-                            "<br> Longitude: " + childs.longitude
+    var infowindow = new google.maps.InfoWindow({
+      content: "<b>" + children.key + "</b>" +
+        "<br>temperatura: " + temperature +
+        "<br><b>humidade: " + humidity +
+        "<br> <b>Coordenadas:</b> <br> Latitude: " + latitude +
+        "<br> Longitude: " + longitude
+    });
 
-                    });
-                    marker.addListener('click', function () {
-                        infowindow.open(map, marker);
-                    });
+    marker.addListener('click', function() {
+      infowindow.open(map, marker);
+    });
 
+    markers.push(marker);
+  });
+});
 
-                    markers.push(marker);
-
-
-                });
-            });
-            });
 
             // Additional map customization or markers can be added here
         }
