@@ -2,7 +2,15 @@
 <html lang="en">
 
 <head>
-
+    
+    <script type="text/javascript"
+    src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js">
+</script>
+<script type="text/javascript">
+(function(){
+  emailjs.init("DvU5ISrFHfDJs6zGN");
+})();
+</script>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -44,67 +52,72 @@
         // Retrieve data from Firebase
         var dataRef = database.ref('/');
         dataRef.on('value', function (snapshot) {
-            var table = `
-  <!-- DataTales Example -->
-  <div class="card shadow mb-4">
-      <div class="card-body">
-          <div class="table-responsive">
-              <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                  <thead>
-                      <tr>
-                          <th>Local</th>
-                          <th>Humidade</th>
-                          <th>Temperatura</th>
-                          <th>Data</th>
-                      </tr>
-                  </thead>
-  `;
+    var table = `
+        <!-- DataTales Example -->
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        <thead>
+                            <tr>
+                                <th>Local</th>
+                                <th>Humidade</th>
+                                <th>Temperatura</th>
+                                <th>Data</th>
+                            </tr>
+                        </thead>
+    `;
 
-            snapshot.forEach(function (childSnapshot) {
-                var childKey = childSnapshot.key;
-                var lastGrandchildSnapshot = null; // variable to store the last grandchildSnapshot
-                var timestamp;
-                var humidade = '';
-                var temperatura = '';
+    snapshot.forEach(function (childSnapshot) {
+        var childKey = childSnapshot.key;
+        var lastGrandchildSnapshot = null; // variable to store the last grandchildSnapshot
+        var timestamp;
+        var humidade = '';
+        var temperatura = '';
 
-                childSnapshot.forEach(function (grandchildSnapshot) {
-                    lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
+        if (childKey !== "Emails") { // Check if childKey is not equal to "Emails"
+            childSnapshot.forEach(function (grandchildSnapshot) {
+                lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
 
-                    timestamp = grandchildSnapshot.key;
+                timestamp = grandchildSnapshot.key;
 
-                    grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
-                        if (grandgrandchildSnapshot.key === "humidity") {
-                            humidade = grandgrandchildSnapshot.val();
-                        } else if (grandgrandchildSnapshot.key === "temperature") {
-                            temperatura = grandgrandchildSnapshot.val();
-                        }
-                    });
+                grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
+                    if (grandgrandchildSnapshot.key === "humidity") {
+                        humidade = grandgrandchildSnapshot.val();
+                    } else if (grandgrandchildSnapshot.key === "temperature") {
+                        temperatura = grandgrandchildSnapshot.val();
+                    }
                 });
-
-                if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
-                    table += `
-      <tr>
-          <td>${childKey}</td>
-          <td>${humidade} %</td>
-          <td>${temperatura} ºC</td>
-          <td>${timestamp}</td>
-      </tr>
-      `;
-                }
             });
 
-            // Close the table
-            table += `
-          </tbody>
-      </table>
-  </div>
-  </div>
-  </div>
-  `;
+            if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
+                table += `
+                    <tr>
+                        <td>${childKey}</td>
+                        <td>${humidade} %</td>
+                        <td>${temperatura} ºC</td>
+                        <td>${timestamp}</td>
+                    </tr>
+                `;
+            }
+        }
+    });
 
-            // Display data on the webpage
-            document.getElementById('sensor-data').innerHTML = table;
-        });
+    // Close the table
+    table += `
+            </tbody>
+        </table>
+    </div>
+    </div>
+    </div>
+    `;
+
+    // Display data on the webpage
+    document.getElementById('sensor-data').innerHTML = table;
+});
+
+
+
         dataRef.on('value', function (snapshot) {
             var alertsDropdown = document.getElementById('alertsDropdown');
             var alertCounter = document.getElementById('alertCounter');
@@ -136,13 +149,9 @@
                 if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
                     // Check if humidity exceeds 50
                     if (temperatura > 40) {
-                        Email.send({
-                            SecureToken: "b278aff1-67e4-4d18-aa7c-7a2fac593671",
-                            To: 'pedromoreiralopes1@gmail.com',
-                            From: "pedromoreiralopes1@gmail.com",
-                            Subject: `Risco de Incêndio - ${timestamp}`,
-                            Body: `Risco de Incêndio em ${childKey}: ${temperatura}º`
-                        });
+                       
+                        
+
 
                         alertsHTML += `
           <a class="dropdown-item d-flex align-items-center" href="#">
@@ -159,7 +168,7 @@
         `;
                         numAlertsExceedingThreshold++; // Increment the count of alerts exceeding the threshold
 
-                        
+                       
                     }
                 }
             });
