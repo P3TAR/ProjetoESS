@@ -71,7 +71,8 @@
                         <h6 class="collapse-header">Custom Components:</h6>
                         <a class="collapse-item" href="chartsHumidade.html">Humidade</a>
                         <a class="collapse-item" href="chartsTemperatura.html">Temperatura</a>
-                        
+                        <a class="collapse-item" href="chartsQualidadeAr.html">Qualidade do Ar</a>
+
                     </div>
                 </div>
             </li>
@@ -223,7 +224,7 @@
                         <div class="col-md-8">
                             <div class="form-group">
                                 <select id="dropdown" class="form-control">
-                                   
+
                                 </select>
                             </div>
                         </div>
@@ -237,8 +238,7 @@
                 <!-- Area Chart -->
                 <div class="card shadow mb-4">
                     <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Humidade - mudar valores, em baixo ficam as
-                            timestamps</h6>
+                        <h6 class="m-0 font-weight-bold text-primary">Humidade</h6>
                     </div>
                     <div class="card-body">
                         <div class="chart-area">
@@ -333,19 +333,20 @@
                 const dropdown = document.getElementById("dropdown");
 
                 // Clear existing options
-                
+
 
                 // Populate options with Firebase child values
                 snapshot.forEach(function (childSnapshot) {
 
                     const childKey = childSnapshot.key;
                     const childValue = childSnapshot.val();
-
-                    console.log(childKey);
-                    const option = document.createElement("option");
-                    option.value = childKey;
-                    option.innerHTML = childKey;
-                    dropdown.appendChild(option);
+                    if (childKey !== "Emails") {
+                        console.log(childKey);
+                        const option = document.createElement("option");
+                        option.value = childKey;
+                        option.innerHTML = childKey;
+                        dropdown.appendChild(option);
+                    }
                 });
             });
 
@@ -354,175 +355,181 @@
         }
 
 
-function generateGraph(local){
-    
-        dataRef.once('value', function (snapshot) {
+        function generateGraph(local) {
 
-            var earnings = [];
-            var dates = [];
-            earnings.length = 0;
-            dates.length = 0;
-            snapshot.forEach(function (childSnapshot) {
-                
-                
-                if (childSnapshot.key === local){
-                childSnapshot.forEach(function (grandchildSnapshot) {
-                    dates.push(grandchildSnapshot.key);
-                    grandchildSnapshot.forEach(function(grandgrandchildSnapshot){
-                        if (grandgrandchildSnapshot.key === "humidity") {
-                        humidade = grandgrandchildSnapshot.val(); // assign first grandchild value
-                        earnings.push(humidade);
-                        
+            dataRef.once('value', function (snapshot) {
+
+                var earnings = [];
+                var dates = [];
+                earnings.length = 0;
+                dates.length = 0;
+                snapshot.forEach(function (childSnapshot) {
+
+
+                    if (childSnapshot.key === local) {
+                        childSnapshot.forEach(function (grandchildSnapshot) {
+                            dates.push(grandchildSnapshot.key);
+                            grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
+                                if (grandgrandchildSnapshot.key === "humidity") {
+                                    humidade = grandgrandchildSnapshot.val(); // assign first grandchild value
+                                    earnings.push(humidade);
+
+                                }
+                            });
+
+
+
+                        });
+
                     }
-                    });
-                    
-
 
                 });
 
-            }
-
-            });
 
 
 
 
 
-          
-            // Set new default font family and font color to mimic Bootstrap's default styling
-            Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
-            Chart.defaults.global.defaultFontColor = '#858796';
+                // Set new default font family and font color to mimic Bootstrap's default styling
+                Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+                Chart.defaults.global.defaultFontColor = '#858796';
 
-            function number_format(number, decimals, dec_point, thousands_sep) {
-                // *     example: number_format(1234.56, 2, ',', ' ');
-                // *     return: '1 234,56'
-                number = (number + '').replace(',', '').replace(' ', '');
-                var n = !isFinite(+number) ? 0 : +number,
-                    prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
-                    sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
-                    dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
-                    s = '',
-                    toFixedFix = function (n, prec) {
-                        var k = Math.pow(10, prec);
-                        return '' + Math.round(n * k) / k;
-                    };
-                // Fix for IE parseFloat(0.55).toFixed(0) = 0;
-                s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
-                if (s[0].length > 3) {
-                    s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
+                function number_format(number, decimals, dec_point, thousands_sep) {
+                    // *     example: number_format(1234.56, 2, ',', ' ');
+                    // *     return: '1 234,56'
+                    number = (number + '').replace(',', '').replace(' ', '');
+                    var n = !isFinite(+number) ? 0 : +number,
+                        prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
+                        sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
+                        dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
+                        s = '',
+                        toFixedFix = function (n, prec) {
+                            var k = Math.pow(10, prec);
+                            return '' + Math.round(n * k) / k;
+                        };
+                    // Fix for IE parseFloat(0.55).toFixed(0) = 0;
+                    s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
+                    if (s[0].length > 3) {
+                        s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
+                    }
+                    if ((s[1] || '').length < prec) {
+                        s[1] = s[1] || '';
+                        s[1] += new Array(prec - s[1].length + 1).join('0');
+                    }
+                    return s.join(dec);
                 }
-                if ((s[1] || '').length < prec) {
-                    s[1] = s[1] || '';
-                    s[1] += new Array(prec - s[1].length + 1).join('0');
-                }
-                return s.join(dec);
-            }
 
-            // Area Chart Example
-            var ctx = document.getElementById("myAreaChart");
-            
-            var myLineChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [{
-                        label: "Humidade",
-                        lineTension: 0.3,
-                        backgroundColor: "rgba(78, 115, 223, 0.05)",
-                        borderColor: "rgba(78, 115, 223, 1)",
-                        pointRadius: 3,
-                        pointBackgroundColor: "rgba(78, 115, 223, 1)",
-                        pointBorderColor: "rgba(78, 115, 223, 1)",
-                        pointHoverRadius: 3,
-                        pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
-                        pointHoverBorderColor: "rgba(78, 115, 223, 1)",
-                        pointHitRadius: 10,
-                        pointBorderWidth: 2,
-                        data: earnings,
-                    }],
-                },
-                options: {
-                    maintainAspectRatio: false,
-                    layout: {
-                        padding: {
-                            left: 10,
-                            right: 25,
-                            top: 25,
-                            bottom: 0
-                        }
-                    },
-                    scales: {
-                        xAxes: [{
-                            time: {
-                                unit: 'date'
-                            },
-                            gridLines: {
-                                display: false,
-                                drawBorder: false
-                            },
-                            ticks: {
-                                maxTicksLimit: 7
-                            }
+                // Area Chart Example
+                var ctx = document.getElementById("myAreaChart");
+
+                var myLineChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: dates,
+                        datasets: [{
+                            label: "Humidade",
+                            lineTension: 0.3,
+                            backgroundColor: "rgba(78, 115, 223, 0.05)",
+                            borderColor: "rgba(78, 115, 223, 1)",
+                            pointRadius: 3,
+                            pointBackgroundColor: "rgba(78, 115, 223, 1)",
+                            pointBorderColor: "rgba(78, 115, 223, 1)",
+
+                            pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
+                            pointHoverBorderColor: "rgba(78, 115, 223, 1)",
+                            pointHitRadius: 10,
+                            pointBorderWidth: 2,
+                            data: earnings,
                         }],
-                        yAxes: [{
-                            ticks: {
-                                maxTicksLimit: 5,
-                                padding: 10,
-                                // Include a dollar sign in the ticks
-                                callback: function (value, index, values) {
-                                    return number_format(value) + '%';
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        layout: {
+                            padding: {
+                                left: 10,
+                                right: 25,
+                                top: 25,
+                                bottom: 0
+                            }
+                        },
+                        scales: {
+                            xAxes: [{
+                                time: {
+                                    unit: 'date'
+                                },
+                                gridLines: {
+                                    display: false,
+                                    drawBorder: false
+                                },
+                                ticks: {
+                                    maxTicksLimit: 7
                                 }
-                            },
-                            gridLines: {
-                                color: "rgb(234, 236, 244)",
-                                zeroLineColor: "rgb(234, 236, 244)",
-                                drawBorder: false,
-                                borderDash: [2],
-                                zeroLineBorderDash: [2]
+                            }],
+                            yAxes: [{
+                                ticks: {
+                                    maxTicksLimit: 5,
+                                    padding: 10,
+                                    // Include a dollar sign in the ticks
+                                    callback: function (value, index, values) {
+                                        return number_format(value) + '%';
+                                    }
+                                },
+                                gridLines: {
+                                    color: "rgb(234, 236, 244)",
+                                    zeroLineColor: "rgb(234, 236, 244)",
+                                    drawBorder: false,
+                                    borderDash: [2],
+                                    zeroLineBorderDash: [2]
+                                }
+                            }],
+                        },
+                        legend: {
+                            display: false
+                        },
+                        tooltips: {
+                            backgroundColor: "rgb(255,255,255)",
+                            bodyFontColor: "#858796",
+                            titleMarginBottom: 10,
+                            titleFontColor: '#6e707e',
+                            titleFontSize: 14,
+                            borderColor: '#dddfeb',
+                            borderWidth: 1,
+                            xPadding: 15,
+                            yPadding: 15,
+                            displayColors: false,
+                            intersect: false,
+                            mode: 'index',
+                            caretPadding: 10,
+                            callbacks: {
+                                label: function (tooltipItem, chart) {
+                                    var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
+                                    return datasetLabel + ': ' + number_format(tooltipItem.yLabel) + '%';
+                                }
                             }
-                        }],
-                    },
-                    legend: {
-                        display: false
-                    },
-                    tooltips: {
-                        backgroundColor: "rgb(255,255,255)",
-                        bodyFontColor: "#858796",
-                        titleMarginBottom: 10,
-                        titleFontColor: '#6e707e',
-                        titleFontSize: 14,
-                        borderColor: '#dddfeb',
-                        borderWidth: 1,
-                        xPadding: 15,
-                        yPadding: 15,
-                        displayColors: false,
-                        intersect: false,
-                        mode: 'index',
-                        caretPadding: 10,
-                        callbacks: {
-                            label: function (tooltipItem, chart) {
-                                var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
-                                return datasetLabel +': '+ number_format(tooltipItem.yLabel) + '%';
-                            }
+                        },
+                        tooltips: {
+                            enabled: false, // Disable tooltips
+                        },
+                        hover: {
+                            mode: null,
                         }
                     }
-                }
+                });
             });
-        });
 
-    }
+        }
 
-   
+
         populateDropdown();
         const loadButton = document.getElementById("loadButton");
-        window.addEventListener('load', function() {
-    setTimeout(function() {
-        loadButton.click();
-    }, 1000); // 1000 ms timeout
-});
-        
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                loadButton.click();
+            }, 1000); // 1000 ms timeout
+        });
+
         loadButton.addEventListener("click", function () {
-            
+
             performAction();
         });
         // Action to perform when the button is clicked
@@ -541,39 +548,39 @@ function generateGraph(local){
             }
             generateGraph(selectedValue);
         }
-        
+
         dataRef.on('value', function (snapshot) {
-  var alertsDropdown = document.getElementById('alertsDropdown');
-  var alertCounter = document.getElementById('alertCounter');
-  var dropdownMenu = alertsDropdown.nextElementSibling;
-  var alertsHTML = '';
-  var numAlertsExceedingThreshold = 0; // Variable to store the count of alerts exceeding the threshold
+            var alertsDropdown = document.getElementById('alertsDropdown');
+            var alertCounter = document.getElementById('alertCounter');
+            var dropdownMenu = alertsDropdown.nextElementSibling;
+            var alertsHTML = '';
+            var numAlertsExceedingThreshold = 0; // Variable to store the count of alerts exceeding the threshold
 
-  snapshot.forEach(function (childSnapshot) {
-    var childKey = childSnapshot.key;
-    var lastGrandchildSnapshot = null; // variable to store the last grandchildSnapshot
-    var timestamp;
-    var humidade = '';
-    var temperatura = '';
+            snapshot.forEach(function (childSnapshot) {
+                var childKey = childSnapshot.key;
+                var lastGrandchildSnapshot = null; // variable to store the last grandchildSnapshot
+                var timestamp;
+                var humidade = '';
+                var temperatura = '';
 
-    childSnapshot.forEach(function (grandchildSnapshot) {
-      lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
+                childSnapshot.forEach(function (grandchildSnapshot) {
+                    lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
 
-      timestamp = grandchildSnapshot.key;
+                    timestamp = grandchildSnapshot.key;
 
-      grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
-        if (grandgrandchildSnapshot.key === "humidity") {
-          humidade = grandgrandchildSnapshot.val();
-        } else if (grandgrandchildSnapshot.key === "temperature") {
-          temperatura = grandgrandchildSnapshot.val();
-        }
-      });
-    });
+                    grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
+                        if (grandgrandchildSnapshot.key === "humidity") {
+                            humidade = grandgrandchildSnapshot.val();
+                        } else if (grandgrandchildSnapshot.key === "temperature") {
+                            temperatura = grandgrandchildSnapshot.val();
+                        }
+                    });
+                });
 
-    if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
-      // Check if humidity exceeds 50
-      if (temperatura > 40) {
-        alertsHTML += `
+                if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
+                    // Check if humidity exceeds 50
+                    if (temperatura > 40) {
+                        alertsHTML += `
           <a class="dropdown-item d-flex align-items-center" href="#">
             <div class="mr-3">
               <div class="icon-circle bg-danger">
@@ -586,25 +593,25 @@ function generateGraph(local){
             </div>
           </a>
         `;
-        numAlertsExceedingThreshold++; // Increment the count of alerts exceeding the threshold
-      }
-    }
-  });
+                        numAlertsExceedingThreshold++; // Increment the count of alerts exceeding the threshold
+                    }
+                }
+            });
 
-  // Update the alerts dropdown menu
-  dropdownMenu.innerHTML = alertsHTML;
+            // Update the alerts dropdown menu
+            dropdownMenu.innerHTML = alertsHTML;
 
-  // Update the alert counter
-  if (numAlertsExceedingThreshold > 0) {
-    alertCounter.textContent = numAlertsExceedingThreshold > 99 ? '99+' : numAlertsExceedingThreshold.toString();
-    alertCounter.style.display = 'inline-block';
-  } else {
-    alertCounter.style.display = 'none';
-  }
-});
+            // Update the alert counter
+            if (numAlertsExceedingThreshold > 0) {
+                alertCounter.textContent = numAlertsExceedingThreshold > 99 ? '99+' : numAlertsExceedingThreshold.toString();
+                alertCounter.style.display = 'inline-block';
+            } else {
+                alertCounter.style.display = 'none';
+            }
+        });
 
 
-   
+
     </script>
 
     <script src="js/demo/chart-pie-demo.js"></script>

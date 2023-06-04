@@ -23,185 +23,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-database.js"></script>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-    <script>
-        // Initialize Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyBGCcL98x63OQhzMJVK_CHDYYujXMlZ7Go",
-            authDomain: "essprojeto-36635.firebaseapp.com",
-            databaseURL: "https://essprojeto-36635-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "essprojeto-36635",
-            storageBucket: "essprojeto-36635.appspot.com",
-            messagingSenderId: "686753305223",
-            appId: "1:686753305223:web:2736a29999dc877b889e22",
-            measurementId: "G-1PR3JTD8RB"
-        };
-        firebase.initializeApp(firebaseConfig);
 
-        // Get a reference to the database service
-        var database = firebase.database();
-
-        // Retrieve data from Firebase
-        var dataRef = database.ref('/');
-
-        function generateTable(valor, page, pageSize) {
-    dataRef.on('value', function (snapshot) {
-        var rows = []; // Array to store the rows
-
-        snapshot.forEach(function (childSnapshot) {
-            var childKey = childSnapshot.key;
-            var humidade = '';
-            var temperatura = '';
-            var flag = 0;
-            var estadogases = '';
-            var gases = '';
-
-            if (childKey == valor) {
-                childSnapshot.forEach(function (grandchildSnapshot) {
-                    var timestamp = grandchildSnapshot.key;
-
-                    grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
-                        if (grandgrandchildSnapshot.key === "humidity") {
-                            humidade = grandgrandchildSnapshot.val();
-                        } else if (grandgrandchildSnapshot.key === "temperature") {
-                            temperatura = grandgrandchildSnapshot.val();
-                        } else if (grandgrandchildSnapshot.key === "gases") {
-                            gases = grandgrandchildSnapshot.val();
-                            if (gases > 0 && gases < 50) {
-                                estadogases = "Excelente";
-                            } else if (gases >= 50 && gases < 100) {
-                                estadogases = "Boa";
-                            } else if (gases >= 100 && gases < 150) {
-                                estadogases = "Moderada";
-                            } else if (gases >= 150 && gases < 200) {
-                                estadogases = "Má";
-                            } else {
-                                estadogases = "Muito Má";
-                            }
-                        }
-                    });
-
-                    // Push the row to the array
-                    rows.push(`
-                        <tr>
-                            <td>${childKey}</td>
-                            <td>${humidade} %</td>
-                            <td>${temperatura} ºC</td>
-                            <td>${estadogases} - ${gases} ppm</td> 
-                            <td>${timestamp}</td>
-                        </tr>
-                    `);
-                });
-            }
-        });
-
-        // Reverse the order of the rows
-        rows.reverse();
-
-        // Calculate pagination values
-        var totalRows = rows.length;
-        var totalPages = Math.min(Math.ceil(totalRows / pageSize), 30);
-        var start = (page - 1) * pageSize;
-        var end = start + pageSize;
-        var currentPageRows = rows.slice(start, end);
-
-        // Join the rows together to form the table body
-        var tableBody = currentPageRows.join('');
-
-        // Create pagination navigation
-        var pagination = `
-            <nav aria-label="Page navigation">
-                <ul class="pagination">
-                    <li class="page-item ${page === 1 ? 'disabled' : ''}">
-                        <a class="page-link" href="#" onclick="generateTable('${valor}', ${page - 1}, ${pageSize})" tabindex="-1" aria-disabled="true">Previous</a>
-                    </li>
-        `;
-
-        for (var i = 1; i <= totalPages; i++) {
-            pagination += `
-                <li class="page-item ${page === i ? 'active' : ''}">
-                    <a class="page-link" href="#" onclick="generateTable('${valor}', ${i}, ${pageSize})">${i}</a>
-                </li>
-            `;
-        }
-
-        pagination += `
-                    <li class="page-item ${page === totalPages ? 'disabled' : ''}">
-                        <a class="page-link" href="#" onclick="generateTable('${valor}', ${page + 1}, ${pageSize})">Next</a>
-                    </li>
-                </ul>
-            </nav>
-        `;
-
-        // Create the table HTML
-        var table = `
-            <!-- DataTales Example -->
-            <div class="card shadow mb-4">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                            <thead>
-                                <tr>
-                                    <th>Local</th>
-                                    <th>Humidade</th>
-                                    <th>Temperatura</th>
-                                    <th>Qualidade do Ar</th>
-                                    <th>Data</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${tableBody}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div class="text-center">
-                ${pagination}
-            </div>
-        `;
-
-        // Display data on webpage
-        document.getElementById('sensor-data').innerHTML = table;
-    });
-}
-
-
-
-
-
-
-
-
-
-    </script>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
-    <style>
-        .custom-button {
-            background-color: #007bff;
-            color: #fff;
-            border-color: #007bff;
-            margin-bottom: 15px;
-        }
-
-        .dropdown-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 25%;
-        }
-
-        .dropdown-container .form-group {
-            margin-right: 10px;
-            flex: 1;
-        }
-
-        .container {
-            margin-left: 0px;
-            margin-bottom: 10px;
-            /* Adjust the left padding as needed */
-        }
-    </style>
 </head>
 
 <body id="page-top">
@@ -250,6 +72,7 @@
                         <a class="collapse-item" href="chartsHumidade.html">Humidade</a>
                         <a class="collapse-item" href="chartsTemperatura.html">Temperatura</a>
                         <a class="collapse-item" href="chartsQualidadeAr.html">Qualidade do Ar</a>
+                        
                     </div>
                 </div>
             </li>
@@ -261,6 +84,7 @@
                     <i class="fas fa-fw fa-table"></i>
                     <span>Histórico</span></a>
             </li>
+
             <li class="nav-item">
                 <a class="nav-link" href="map.html">
                     <i class="fas fa-fw fa-table"></i>
@@ -282,6 +106,7 @@
 
         </ul>
         <!-- End of Sidebar -->
+
 
         <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">
@@ -361,27 +186,77 @@
 
             </nav>
             <!-- End of Topbar -->
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-8">
-                        <div class="form-group">
-                            <select id="dropdown" class="form-control">
-
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <button id="loadButton" class="btn btn-primary btn-block custom-button">Load
-                            Options</button>
-                    </div>
-                </div>
-            </div>
             <div id="sensor-data"></div>
 
+            <!-- Content Row -->
+            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+            <style>
+                .custom-button {
+                    background-color: #007bff;
+                    color: #fff;
+                    border-color: #007bff;
+                    margin-bottom: 15px;
+                }
+
+                .dropdown-container {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    width: 25%;
+                }
+
+                .dropdown-container .form-group {
+                    margin-right: 10px;
+                    flex: 1;
+                }
+
+                .container {
+                    margin-left: 0px;
+                    margin-bottom: 10px;
+                    /* Adjust the left padding as needed */
+                }
+            </style>
 
 
-            <!-- End of Main Content -->
+            <body>
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <select id="dropdown" class="form-control">
+                                   
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <button id="loadButton" class="btn btn-primary btn-block custom-button">Load
+                                Options</button>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- Area Chart -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Qualidade do Ar</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-area">
+                            <canvas id="myAreaChart"></canvas>
+                        </div>
+                        <hr>
+
+                    </div>
+                </div>
+
+                <!-- End of Main Content -->
+                <footer class="sticky-footer bg-white">
+                    <div class="container my-auto">
+                        <div class="copyright text-center my-auto">
+                            <span>Copyright &copy; Your Website 2020</span>
+                        </div>
+                    </div>
+                </footer>
 
         </div>
         <!-- End of Content Wrapper -->
@@ -414,6 +289,7 @@
         </div>
     </div>
 
+
     <!-- Bootstrap core JavaScript-->
     <script src="vendor/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
@@ -427,11 +303,29 @@
     <!-- Page level plugins -->
     <script src="vendor/chart.js/Chart.min.js"></script>
 
+    <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.5/firebase-database.js"></script>
     <!-- Page level custom scripts -->
-    <script src="js/demo/chart-area-demo.js"></script>
-    <script src="js/demo/chart-pie-demo.js"></script>
-
     <script>
+
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBGCcL98x63OQhzMJVK_CHDYYujXMlZ7Go",
+            authDomain: "essprojeto-36635.firebaseapp.com",
+            databaseURL: "https://essprojeto-36635-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "essprojeto-36635",
+            storageBucket: "essprojeto-36635.appspot.com",
+            messagingSenderId: "686753305223",
+            appId: "1:686753305223:web:2736a29999dc877b889e22",
+            measurementId: "G-1PR3JTD8RB"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        // Get a reference to the database service
+        var database = firebase.database();
+
+        // Retrieve data from Firebase
+        var dataRef = database.ref('/');
 
         function populateDropdown() {
             // Retrieve the data from Firebase and populate the dropdown
@@ -439,19 +333,19 @@
                 const dropdown = document.getElementById("dropdown");
 
                 // Clear existing options
-
+                
 
                 // Populate options with Firebase child values
                 snapshot.forEach(function (childSnapshot) {
-                    if (childSnapshot.key !== "Emails") {
-                        const childKey = childSnapshot.key;
-                        const childValue = childSnapshot.val();
-
-                        console.log(childKey);
-                        const option = document.createElement("option");
-                        option.value = childKey;
-                        option.innerHTML = childKey;
-                        dropdown.appendChild(option);
+                    
+                    const childKey = childSnapshot.key;
+                    const childValue = childSnapshot.val();
+                    if (childKey !=="Emails"){
+                    console.log(childKey);
+                    const option = document.createElement("option");
+                    option.value = childKey;
+                    option.innerHTML = childKey;
+                    dropdown.appendChild(option);
                     }
                 });
             });
@@ -459,16 +353,183 @@
 
 
         }
+
+        function generateGraph(local) {
+
+dataRef.once('value', function (snapshot) {
+
+    var earnings = [];
+    var dates = [];
+    earnings.length = 0;
+    dates.length = 0;
+    snapshot.forEach(function (childSnapshot) {
+
+
+        if (childSnapshot.key === local) {
+            childSnapshot.forEach(function (grandchildSnapshot) {
+                dates.push(grandchildSnapshot.key);
+                grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
+                    if (grandgrandchildSnapshot.key === "gases") {
+                        humidade = grandgrandchildSnapshot.val(); // assign first grandchild value
+                        earnings.push(humidade);
+
+                    }
+                });
+
+
+
+            });
+
+        }
+
+    });
+
+
+
+
+
+
+    // Set new default font family and font color to mimic Bootstrap's default styling
+    Chart.defaults.global.defaultFontFamily = 'Nunito', '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
+    Chart.defaults.global.defaultFontColor = '#858796';
+
+    function number_format(number, decimals, dec_point, thousands_sep) {
+        // *     example: number_format(1234.56, 2, ',', ' ');
+        // *     return: '1 234,56'
+        number = (number + '').replace(',', '').replace(' ', '');
+        var n = !isFinite(+number) ? 0 : +number,
+            prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
+            sep = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep,
+            dec = (typeof dec_point === 'undefined') ? '.' : dec_point,
+            s = '',
+            toFixedFix = function (n, prec) {
+                var k = Math.pow(10, prec);
+                return '' + Math.round(n * k) / k;
+            };
+        // Fix for IE parseFloat(0.55).toFixed(0) = 0;
+        s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
+        if (s[0].length > 3) {
+            s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
+        }
+        if ((s[1] || '').length < prec) {
+            s[1] = s[1] || '';
+            s[1] += new Array(prec - s[1].length + 1).join('0');
+        }
+        return s.join(dec);
+    }
+
+    // Area Chart Example
+    var ctx = document.getElementById("myAreaChart");
+
+    var myLineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [{
+                label: "Humidade",
+                lineTension: 0.3,
+                backgroundColor: "rgba(78, 115, 223, 0.05)",
+                borderColor: "rgba(78, 115, 223, 1)",
+                pointRadius: 3,
+                pointBackgroundColor: "rgba(78, 115, 223, 1)",
+                pointBorderColor: "rgba(78, 115, 223, 1)",
+
+                pointHoverBackgroundColor: "rgba(78, 115, 223, 1)",
+                pointHoverBorderColor: "rgba(78, 115, 223, 1)",
+                pointHitRadius: 10,
+                pointBorderWidth: 2,
+                data: earnings,
+            }],
+        },
+        options: {
+            maintainAspectRatio: false,
+            layout: {
+                padding: {
+                    left: 10,
+                    right: 25,
+                    top: 25,
+                    bottom: 0
+                }
+            },
+            scales: {
+                xAxes: [{
+                    time: {
+                        unit: 'date'
+                    },
+                    gridLines: {
+                        display: false,
+                        drawBorder: false
+                    },
+                    ticks: {
+                        maxTicksLimit: 7
+                    }
+                }],
+                yAxes: [{
+                    ticks: {
+                        maxTicksLimit: 5,
+                        padding: 10,
+                        // Include a dollar sign in the ticks
+                        callback: function (value, index, values) {
+                            return number_format(value) + '%';
+                        }
+                    },
+                    gridLines: {
+                        color: "rgb(234, 236, 244)",
+                        zeroLineColor: "rgb(234, 236, 244)",
+                        drawBorder: false,
+                        borderDash: [2],
+                        zeroLineBorderDash: [2]
+                    }
+                }],
+            },
+            legend: {
+                display: false
+            },
+            tooltips: {
+                backgroundColor: "rgb(255,255,255)",
+                bodyFontColor: "#858796",
+                titleMarginBottom: 10,
+                titleFontColor: '#6e707e',
+                titleFontSize: 14,
+                borderColor: '#dddfeb',
+                borderWidth: 1,
+                xPadding: 15,
+                yPadding: 15,
+                displayColors: false,
+                intersect: false,
+                mode: 'index',
+                caretPadding: 10,
+                callbacks: {
+                    label: function (tooltipItem, chart) {
+                        var datasetLabel = chart.datasets[tooltipItem.datasetIndex].label || '';
+                        return datasetLabel + ': ' + number_format(tooltipItem.yLabel) + '%';
+                    }
+                }
+            },
+            tooltips: {
+                enabled: false, // Disable tooltips
+            },
+            hover: {
+                mode: null,
+            }
+        }
+    });
+});
+
+}
+
+
+   
         populateDropdown();
-
         const loadButton = document.getElementById("loadButton");
-        window.addEventListener('load', function () {
-            setTimeout(function () {
-                loadButton.click();
-            }, 1000); // 1000 ms timeout
-        });
+        window.addEventListener('load', function() {
+    setTimeout(function() {
+        loadButton.click();
+    }, 1000); // 1000 ms timeout
+});
+        
         loadButton.addEventListener("click", function () {
-
+            
             performAction();
         });
         // Action to perform when the button is clicked
@@ -485,41 +546,41 @@
                 // Do something else based on the selected value
                 console.log("Selected value:", selectedValue);
             }
-            generateTable(selectedValue, 1, 10);
+            generateGraph(selectedValue);
         }
-
+        
         dataRef.on('value', function (snapshot) {
-            var alertsDropdown = document.getElementById('alertsDropdown');
-            var alertCounter = document.getElementById('alertCounter');
-            var dropdownMenu = alertsDropdown.nextElementSibling;
-            var alertsHTML = '';
-            var numAlertsExceedingThreshold = 0; // Variable to store the count of alerts exceeding the threshold
+  var alertsDropdown = document.getElementById('alertsDropdown');
+  var alertCounter = document.getElementById('alertCounter');
+  var dropdownMenu = alertsDropdown.nextElementSibling;
+  var alertsHTML = '';
+  var numAlertsExceedingThreshold = 0; // Variable to store the count of alerts exceeding the threshold
 
-            snapshot.forEach(function (childSnapshot) {
-                var childKey = childSnapshot.key;
-                var lastGrandchildSnapshot = null; // variable to store the last grandchildSnapshot
-                var timestamp;
-                var humidade = '';
-                var temperatura = '';
+  snapshot.forEach(function (childSnapshot) {
+    var childKey = childSnapshot.key;
+    var lastGrandchildSnapshot = null; // variable to store the last grandchildSnapshot
+    var timestamp;
+    var humidade = '';
+    var temperatura = '';
 
-                childSnapshot.forEach(function (grandchildSnapshot) {
-                    lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
+    childSnapshot.forEach(function (grandchildSnapshot) {
+      lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
 
-                    timestamp = grandchildSnapshot.key;
+      timestamp = grandchildSnapshot.key;
 
-                    grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
-                        if (grandgrandchildSnapshot.key === "humidity") {
-                            humidade = grandgrandchildSnapshot.val();
-                        } else if (grandgrandchildSnapshot.key === "temperature") {
-                            temperatura = grandgrandchildSnapshot.val();
-                        }
-                    });
-                });
+      grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
+        if (grandgrandchildSnapshot.key === "humidity") {
+          humidade = grandgrandchildSnapshot.val();
+        } else if (grandgrandchildSnapshot.key === "temperature") {
+          temperatura = grandgrandchildSnapshot.val();
+        }
+      });
+    });
 
-                if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
-                    // Check if humidity exceeds 50
-                    if (temperatura > 40) {
-                        alertsHTML += `
+    if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
+      // Check if humidity exceeds 50
+      if (temperatura > 40) {
+        alertsHTML += `
           <a class="dropdown-item d-flex align-items-center" href="#">
             <div class="mr-3">
               <div class="icon-circle bg-danger">
@@ -532,26 +593,30 @@
             </div>
           </a>
         `;
-                        numAlertsExceedingThreshold++; // Increment the count of alerts exceeding the threshold
-                    }
-                }
-            });
+        numAlertsExceedingThreshold++; // Increment the count of alerts exceeding the threshold
+      }
+    }
+  });
 
-            // Update the alerts dropdown menu
-            dropdownMenu.innerHTML = alertsHTML;
+  // Update the alerts dropdown menu
+  dropdownMenu.innerHTML = alertsHTML;
 
-            // Update the alert counter
-            if (numAlertsExceedingThreshold > 0) {
-                alertCounter.textContent = numAlertsExceedingThreshold > 99 ? '99+' : numAlertsExceedingThreshold.toString();
-                alertCounter.style.display = 'inline-block';
-            } else {
-                alertCounter.style.display = 'none';
-            }
-        });
+  // Update the alert counter
+  if (numAlertsExceedingThreshold > 0) {
+    alertCounter.textContent = numAlertsExceedingThreshold > 99 ? '99+' : numAlertsExceedingThreshold.toString();
+    alertCounter.style.display = 'inline-block';
+  } else {
+    alertCounter.style.display = 'none';
+  }
+});
 
 
-
+   
     </script>
+
+    <script src="js/demo/chart-pie-demo.js"></script>
+    <script src="js/demo/chart-bar-demo.js"></script>
+
 </body>
 
 </html>
