@@ -87,15 +87,13 @@
                                 humidade = grandgrandchildSnapshot.val();
                             } else if (grandgrandchildSnapshot.key === "temperature") {
                                 temperatura = grandgrandchildSnapshot.val();
-                            } else if (grandgrandchildSnapshot.key === "gases"){
+                            } else if (grandgrandchildSnapshot.key === "Gases"){
                                 gases = grandgrandchildSnapshot.val();
-                                if (gases>0 && gases<50){
-                                    estadogases = "Excelente";
-                                } else if (gases>=50 && gases<100){
+                                if (gases>0 && gases<400){
                                     estadogases = "Boa";
-                                }else if (gases>=100 && gases<150){
+                                } else if (gases>=400 && gases<1000){
                                     estadogases = "Moderada";
-                                }else if (gases>=150 && gases<200){
+                                }else if (gases>=1000 && gases<2000){
                                     estadogases = "Má";
                                 }else{
                                     estadogases = "Muito Má";
@@ -157,7 +155,7 @@
                             humidade = grandgrandchildSnapshot.val();
                         } else if (grandgrandchildSnapshot.key === "temperature") {
                             temperatura = grandgrandchildSnapshot.val();
-                        } else if (grandgrandchildSnapshot.key === "gases"){
+                        } else if (grandgrandchildSnapshot.key === "Gases"){
                             gases = grandgrandchildSnapshot.val();
                             console.log(gases);
                         }
@@ -206,7 +204,7 @@
 numAlertsExceedingThreshold++;
                     }
 
-                    if (gases > 200){
+                    if (gases > 2000){
                         alertsHTML += `
   <a class="dropdown-item d-flex align-items-center" href="#">
     <div class="mr-3">

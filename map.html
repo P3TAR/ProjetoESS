@@ -59,7 +59,7 @@
                 var timestamp;
                 var humidade = '';
                 var temperatura = '';
-
+                var gases = '';
                 childSnapshot.forEach(function (grandchildSnapshot) {
                     lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
 
@@ -70,13 +70,20 @@
                             humidade = grandgrandchildSnapshot.val();
                         } else if (grandgrandchildSnapshot.key === "temperature") {
                             temperatura = grandgrandchildSnapshot.val();
+                        } else if (grandgrandchildSnapshot.key === "Gases"){
+                            gases = grandgrandchildSnapshot.val();
+                            console.log(gases);
                         }
                     });
                 });
 
-                if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
+                if (lastGrandchildSnapshot && childKey !=="Emails") { // check if a grandchildSnapshot was found
                     // Check if humidity exceeds 50
                     if (temperatura > 40) {
+
+
+
+
                         alertsHTML += `
           <a class="dropdown-item d-flex align-items-center" href="#">
             <div class="mr-3">
@@ -91,8 +98,47 @@
           </a>
         `;
                         numAlertsExceedingThreshold++; // Increment the count of alerts exceeding the threshold
+
+
                     }
+                    if (humidade < 25){
+                        alertsHTML += `
+  <a class="dropdown-item d-flex align-items-center" href="#">
+    <div class="mr-3">
+      <div class="icon-circle bg-warning"> <!-- Changed the class to "bg-warning" for yellow color -->
+        <i class="fas fa-tint text-white"></i>
+      </div>
+    </div>
+    <div>
+      <div class="medium text-balck-500">${childKey} : Humidade Baixa</div>
+      <span class="font-weight-bold">Humidity: ${humidade}%</span>
+    </div>
+  </a>
+`;
+
+numAlertsExceedingThreshold++;
+                    }
+
+                    if (gases > 2000){
+                        alertsHTML += `
+  <a class="dropdown-item d-flex align-items-center" href="#">
+    <div class="mr-3">
+      <div class="icon-circle bg-info"> <!-- Changed the class to "bg-info" for a different color -->
+        <i class="fas fa-wind text-white"></i> <!-- Changed the icon class to "fas fa-wind" for air quality -->
+      </div>
+    </div>
+    <div>
+      <div class="medium text-balck-500">${childKey} : Air Quality Alert</div> <!-- Update the text if needed -->
+      <span class="font-weight-bold">Air Quality Index: ${gases}</span> <!-- Update the text if needed -->
+    </div>
+  </a>
+`;
+numAlertsExceedingThreshold++;
+                    }
+
+                    
                 }
+                
             });
 
             // Update the alerts dropdown menu
@@ -106,7 +152,6 @@
                 alertCounter.style.display = 'none';
             }
         });
-
 
 
 
@@ -392,6 +437,7 @@
       content: "<b>" + children.key + "</b>" +
         "<br>temperatura: " + temperature +
         "<br><b>humidade: " + humidity +
+            "<br>Qualidade do ar: " + estadogases +
         "<br> <b>Coordenadas:</b> <br> Latitude: " + latitude +
         "<br> Longitude: " + longitude
     });

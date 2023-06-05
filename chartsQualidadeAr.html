@@ -369,7 +369,7 @@ dataRef.once('value', function (snapshot) {
             childSnapshot.forEach(function (grandchildSnapshot) {
                 dates.push(grandchildSnapshot.key);
                 grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
-                    if (grandgrandchildSnapshot.key === "gases") {
+                    if (grandgrandchildSnapshot.key === "Gases") {
                         humidade = grandgrandchildSnapshot.val(); // assign first grandchild value
                         earnings.push(humidade);
 
@@ -549,38 +549,46 @@ dataRef.once('value', function (snapshot) {
             generateGraph(selectedValue);
         }
         
+        
         dataRef.on('value', function (snapshot) {
-  var alertsDropdown = document.getElementById('alertsDropdown');
-  var alertCounter = document.getElementById('alertCounter');
-  var dropdownMenu = alertsDropdown.nextElementSibling;
-  var alertsHTML = '';
-  var numAlertsExceedingThreshold = 0; // Variable to store the count of alerts exceeding the threshold
+            var alertsDropdown = document.getElementById('alertsDropdown');
+            var alertCounter = document.getElementById('alertCounter');
+            var dropdownMenu = alertsDropdown.nextElementSibling;
+            var alertsHTML = '';
+            var numAlertsExceedingThreshold = 0; // Variable to store the count of alerts exceeding the threshold
 
-  snapshot.forEach(function (childSnapshot) {
-    var childKey = childSnapshot.key;
-    var lastGrandchildSnapshot = null; // variable to store the last grandchildSnapshot
-    var timestamp;
-    var humidade = '';
-    var temperatura = '';
+            snapshot.forEach(function (childSnapshot) {
+                var childKey = childSnapshot.key;
+                var lastGrandchildSnapshot = null; // variable to store the last grandchildSnapshot
+                var timestamp;
+                var humidade = '';
+                var temperatura = '';
+                var gases = '';
+                childSnapshot.forEach(function (grandchildSnapshot) {
+                    lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
 
-    childSnapshot.forEach(function (grandchildSnapshot) {
-      lastGrandchildSnapshot = grandchildSnapshot; // overwrite with each iteration
+                    timestamp = grandchildSnapshot.key;
 
-      timestamp = grandchildSnapshot.key;
+                    grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
+                        if (grandgrandchildSnapshot.key === "humidity") {
+                            humidade = grandgrandchildSnapshot.val();
+                        } else if (grandgrandchildSnapshot.key === "temperature") {
+                            temperatura = grandgrandchildSnapshot.val();
+                        } else if (grandgrandchildSnapshot.key === "Gases"){
+                            gases = grandgrandchildSnapshot.val();
+                            console.log(gases);
+                        }
+                    });
+                });
 
-      grandchildSnapshot.forEach(function (grandgrandchildSnapshot) {
-        if (grandgrandchildSnapshot.key === "humidity") {
-          humidade = grandgrandchildSnapshot.val();
-        } else if (grandgrandchildSnapshot.key === "temperature") {
-          temperatura = grandgrandchildSnapshot.val();
-        }
-      });
-    });
+                if (lastGrandchildSnapshot && childKey !=="Emails") { // check if a grandchildSnapshot was found
+                    // Check if humidity exceeds 50
+                    if (temperatura > 40) {
 
-    if (lastGrandchildSnapshot) { // check if a grandchildSnapshot was found
-      // Check if humidity exceeds 50
-      if (temperatura > 40) {
-        alertsHTML += `
+
+
+
+                        alertsHTML += `
           <a class="dropdown-item d-flex align-items-center" href="#">
             <div class="mr-3">
               <div class="icon-circle bg-danger">
@@ -593,22 +601,61 @@ dataRef.once('value', function (snapshot) {
             </div>
           </a>
         `;
-        numAlertsExceedingThreshold++; // Increment the count of alerts exceeding the threshold
-      }
-    }
-  });
+                        numAlertsExceedingThreshold++; // Increment the count of alerts exceeding the threshold
 
-  // Update the alerts dropdown menu
-  dropdownMenu.innerHTML = alertsHTML;
 
-  // Update the alert counter
-  if (numAlertsExceedingThreshold > 0) {
-    alertCounter.textContent = numAlertsExceedingThreshold > 99 ? '99+' : numAlertsExceedingThreshold.toString();
-    alertCounter.style.display = 'inline-block';
-  } else {
-    alertCounter.style.display = 'none';
-  }
-});
+                    }
+                    if (humidade < 25){
+                        alertsHTML += `
+  <a class="dropdown-item d-flex align-items-center" href="#">
+    <div class="mr-3">
+      <div class="icon-circle bg-warning"> <!-- Changed the class to "bg-warning" for yellow color -->
+        <i class="fas fa-tint text-white"></i>
+      </div>
+    </div>
+    <div>
+      <div class="medium text-balck-500">${childKey} : Humidade Baixa</div>
+      <span class="font-weight-bold">Humidity: ${humidade}%</span>
+    </div>
+  </a>
+`;
+
+numAlertsExceedingThreshold++;
+                    }
+
+                    if (gases > 2000){
+                        alertsHTML += `
+  <a class="dropdown-item d-flex align-items-center" href="#">
+    <div class="mr-3">
+      <div class="icon-circle bg-info"> <!-- Changed the class to "bg-info" for a different color -->
+        <i class="fas fa-wind text-white"></i> <!-- Changed the icon class to "fas fa-wind" for air quality -->
+      </div>
+    </div>
+    <div>
+      <div class="medium text-balck-500">${childKey} : Air Quality Alert</div> <!-- Update the text if needed -->
+      <span class="font-weight-bold">Air Quality Index: ${gases}</span> <!-- Update the text if needed -->
+    </div>
+  </a>
+`;
+numAlertsExceedingThreshold++;
+                    }
+
+                    
+                }
+                
+            });
+
+            // Update the alerts dropdown menu
+            dropdownMenu.innerHTML = alertsHTML;
+
+            // Update the alert counter
+            if (numAlertsExceedingThreshold > 0) {
+                alertCounter.textContent = numAlertsExceedingThreshold > 99 ? '99+' : numAlertsExceedingThreshold.toString();
+                alertCounter.style.display = 'inline-block';
+            } else {
+                alertCounter.style.display = 'none';
+            }
+        });
 
 
    
