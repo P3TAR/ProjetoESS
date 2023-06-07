@@ -66,17 +66,15 @@
                             temperatura = grandgrandchildSnapshot.val();
                         } else if (grandgrandchildSnapshot.key === "Gases") {
                             gases = grandgrandchildSnapshot.val();
-                            if (gases > 0 && gases < 50) {
-                                estadogases = "Excelente";
-                            } else if (gases >= 50 && gases < 100) {
-                                estadogases = "Boa";
-                            } else if (gases >= 100 && gases < 150) {
-                                estadogases = "Moderada";
-                            } else if (gases >= 150 && gases < 200) {
-                                estadogases = "Má";
-                            } else {
-                                estadogases = "Muito Má";
-                            }
+                            if (gases>0 && gases<400){
+                                    estadogases = "Boa";
+                                } else if (gases>=400 && gases<1000){
+                                    estadogases = "Moderada";
+                                }else if (gases>=1000 && gases<2000){
+                                    estadogases = "Má";
+                                }else{
+                                    estadogases = "Muito Má";
+                                }
                         }
                     });
 
